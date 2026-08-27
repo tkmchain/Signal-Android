@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
 
-    runs-on: ubuntu-latest-8-cores
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -51,7 +51,7 @@ jobs:
         SIGNAL_BUILD_CACHE_USER: ${{ secrets.SIGNAL_BUILD_CACHE_USER }}
         SIGNAL_BUILD_CACHE_PASSWORD: ${{ secrets.SIGNAL_BUILD_CACHE_PASSWORD }}
         SIGNAL_BUILD_CACHE_PUSH: ${{ startsWith(github.ref, 'refs/heads/8.') }}
-      run: ./gradlew ${{ github.event_name == 'pull_request' && 'ciRemote' || 'qaRemote' }}
+      run: ./gradlew ${{ github.event_name == 'pull_request' && 'ciRemote' || 'qaRemote' }} --max-workers=2
 
     - name: Archive reports for failed build
       if: ${{ failure() }}
