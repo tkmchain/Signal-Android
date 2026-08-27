@@ -111,6 +111,19 @@ class WelcomeScreenViewModelTest {
   }
 
   @Test
+  fun `Continue opens TKM mailbox registration when phone-numberless registration is enabled`() {
+    every { mockRepository.isPhoneNumberlessRegistrationAvailable } returns true
+    val viewModel = createViewModel(hasPermissions = true)
+
+    viewModel.applyEvent(WelcomeScreenState(), WelcomeScreenEvents.Continue, parentEventEmitter, stateEmitter)
+
+    assertThat(emittedParentEvents.last())
+      .isInstanceOf<RegistrationFlowEvent.NavigateToScreen>()
+      .prop(RegistrationFlowEvent.NavigateToScreen::route)
+      .isEqualTo(RegistrationRoute.SignalLoginPayment)
+  }
+
+  @Test
   fun `HasOldPhone navigates to the quick restore scan when permissions are granted`() {
     val viewModel = createViewModel(hasPermissions = true)
 

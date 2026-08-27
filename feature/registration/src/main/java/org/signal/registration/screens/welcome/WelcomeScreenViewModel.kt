@@ -43,6 +43,11 @@ class WelcomeScreenViewModel(
 
   private val _state = MutableStateFlow(WelcomeScreenState(isLinkAndSyncAvailable = repository.isLinkAndSyncAvailable, showRestoreOrTransfer = false))
   val state: StateFlow<WelcomeScreenState> = _state.asStateFlow()
+  private val primaryRegistrationRoute = if (repository.isPhoneNumberlessRegistrationAvailable) {
+    RegistrationRoute.SignalLoginPayment
+  } else {
+    RegistrationRoute.PhoneNumberEntry
+  }
 
   private val _actions = Channel<WelcomeScreenActions>(Channel.BUFFERED)
   val actions: Flow<WelcomeScreenActions> = _actions.receiveAsFlow()
@@ -65,7 +70,7 @@ class WelcomeScreenViewModel(
   fun applyEvent(state: WelcomeScreenState, event: WelcomeScreenEvents, parentEventEmitter: (RegistrationFlowEvent) -> Unit, stateEmitter: (WelcomeScreenState) -> Unit) {
     when (event) {
       is WelcomeScreenEvents.ParentStateChanged -> stateEmitter(applyParentState(state, event.parentState))
-      WelcomeScreenEvents.Continue -> navigateRequestingPermissions(RegistrationRoute.SignalLoginPayment, parentEventEmitter)
+      WelcomeScreenEvents.Continue -> navigateRequestingPermissions(primaryRegistrationRoute, parentEventEmitter)
       WelcomeScreenEvents.HasOldPhone -> navigateRequestingPermissions(RegistrationRoute.QuickRestoreQrScan, parentEventEmitter)
       WelcomeScreenEvents.DoesNotHaveOldPhone -> navigateRequestingPermissions(RegistrationRoute.ArchiveRestoreSelection.forManualRestore(), parentEventEmitter)
       WelcomeScreenEvents.LinkDevice -> {
