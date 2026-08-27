@@ -58,8 +58,8 @@ jobs:
         set -o pipefail
         ./gradlew \
           :feature:registration:testDebugUnitTest \
-          :Signal-Android:compileGithubProdDebugKotlin \
-          :Signal-Android:processGithubProdDebugResources \
+          :Signal-Android:compileGithubProdReleaseKotlin \
+          :Signal-Android:processGithubProdReleaseResources \
           --max-workers=2 2>&1 | tee gradle-build.log
 
     - name: Report Gradle errors
