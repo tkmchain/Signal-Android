@@ -18,7 +18,7 @@ The workflow accepts `TKMCHAT_SERVICE_URL`, `TKMCHAT_STORAGE_URL`, `TKMCHAT_CDN_
 
 The TKMChat server deployment must generate and publish these cryptographic values as GitHub repository variables: `TKMCHAT_ZKGROUP_SERVER_PUBLIC_PARAMS`, `TKMCHAT_GENERIC_SERVER_PUBLIC_PARAMS`, `TKMCHAT_BACKUP_SERVER_PUBLIC_PARAMS`, `TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT`, and `TKMCHAT_SVR2_MRENCLAVE`. The release workflow refuses to publish if any is absent, preventing an apparently independent APK from accidentally shipping Signal production server parameters.
 
-Create a Firebase Android application for package `site.tkmchain.chat` and add `TKMCHAT_FIREBASE_APP_ID`, `TKMCHAT_FIREBASE_SENDER_ID`, and `TKMCHAT_FIREBASE_WEB_CLIENT_ID` as repository variables. The TKMChat service—not Signal's service—must hold the corresponding Firebase server credential. These variables are also mandatory for a tagged release.
+The checked-in TKMChat Firebase app and sender IDs come from the project's `google-services.json` for package `site.tkmchain.chat`. `TKMCHAT_FIREBASE_APP_ID` and `TKMCHAT_FIREBASE_SENDER_ID` may override them for a replacement Firebase project. Add `TKMCHAT_FIREBASE_WEB_CLIENT_ID` only when that project has a web OAuth client; TKMChat explicitly uses an empty value otherwise. The TKMChat service—not Signal's service—must hold the corresponding Firebase server credential.
 
 ## Publish
 

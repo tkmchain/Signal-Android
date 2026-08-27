@@ -50,9 +50,6 @@ jobs:
           BACKUP_PARAMS: ${{ vars.TKMCHAT_BACKUP_SERVER_PUBLIC_PARAMS }}
           SEALED_SENDER_ROOT: ${{ vars.TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT }}
           SVR2_MRENCLAVE: ${{ vars.TKMCHAT_SVR2_MRENCLAVE }}
-          FIREBASE_APP_ID: ${{ vars.TKMCHAT_FIREBASE_APP_ID }}
-          FIREBASE_SENDER_ID: ${{ vars.TKMCHAT_FIREBASE_SENDER_ID }}
-          FIREBASE_WEB_CLIENT_ID: ${{ vars.TKMCHAT_FIREBASE_WEB_CLIENT_ID }}
         run: |
           test -n "$RELEASE_KEYSTORE"
           test -n "$RELEASE_STORE_PASSWORD"
@@ -63,9 +60,6 @@ jobs:
           test -n "$BACKUP_PARAMS"
           test -n "$SEALED_SENDER_ROOT"
           test -n "$SVR2_MRENCLAVE"
-          test -n "$FIREBASE_APP_ID"
-          test -n "$FIREBASE_SENDER_ID"
-          test -n "$FIREBASE_WEB_CLIENT_ID"
 
       - name: Build release APKs
         env:
@@ -86,8 +80,6 @@ jobs:
           TKMCHAT_BACKUP_SERVER_PUBLIC_PARAMS: ${{ vars.TKMCHAT_BACKUP_SERVER_PUBLIC_PARAMS }}
           TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT: ${{ vars.TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT }}
           TKMCHAT_SVR2_MRENCLAVE: ${{ vars.TKMCHAT_SVR2_MRENCLAVE }}
-          TKMCHAT_FIREBASE_APP_ID: ${{ vars.TKMCHAT_FIREBASE_APP_ID }}
-          TKMCHAT_FIREBASE_SENDER_ID: ${{ vars.TKMCHAT_FIREBASE_SENDER_ID }}
           TKMCHAT_FIREBASE_WEB_CLIENT_ID: ${{ vars.TKMCHAT_FIREBASE_WEB_CLIENT_ID }}
         run: ./gradlew :Signal-Android:assembleGithubProdRelease --max-workers=2 --stacktrace
 

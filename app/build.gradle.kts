@@ -508,15 +508,15 @@ android {
         buildConfigField("String", "SVR2_MRENCLAVE", "\"$it\"")
         buildConfigField("String", "SVR2_MRENCLAVE_LEGACY", "\"$it\"")
       }
-      System.getenv("TKMCHAT_FIREBASE_APP_ID")?.takeIf(String::isNotBlank)?.let {
-        resValue("string", "google_app_id", it)
-      }
-      System.getenv("TKMCHAT_FIREBASE_SENDER_ID")?.takeIf(String::isNotBlank)?.let {
-        resValue("string", "gcm_defaultSenderId", it)
-      }
-      System.getenv("TKMCHAT_FIREBASE_WEB_CLIENT_ID")?.takeIf(String::isNotBlank)?.let {
-        resValue("string", "default_web_client_id", it)
-      }
+      // Always override the inherited Signal Firebase resources. These IDs are public Firebase
+      // configuration, not credentials; the matching server credential stays with TKMChat.
+      resValue(
+        "string",
+        "google_app_id",
+        tkmChatEndpoint("TKMCHAT_FIREBASE_APP_ID", "1:958315041014:android:bac660b7d2f6267dda9cd7")
+      )
+      resValue("string", "gcm_defaultSenderId", tkmChatEndpoint("TKMCHAT_FIREBASE_SENDER_ID", "958315041014"))
+      resValue("string", "default_web_client_id", System.getenv("TKMCHAT_FIREBASE_WEB_CLIENT_ID").orEmpty())
     }
 
     create("nightly") {
