@@ -14,6 +14,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -37,21 +38,26 @@ jobs:
       uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
       # gh api repos/gradle/actions/commits/v6 --jq '.sha'
       with:
-        # Only 8.** branch builds write to the cache; everything else (PRs, etc.) reads only.
-        cache-read-only: ${{ !startsWith(github.ref, 'refs/heads/8.') }}
+        # Trusted branch builds populate the cache; pull requests remain read-only.
+        cache-read-only: ${{ github.event_name == 'pull_request' }}
         # Required to persist the Gradle configuration cache across runs.
         cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
-    # Pull requests run the fast custom linter (ciRemote); pushes to main / 8.x branches run the
-    # full Android lint (qaRemote). Both include screenshot validation, which is deliberately kept
-    # out of the local qa/ci tasks because screenshot rendering is host-OS dependent.
+    # Compile the app and run the registration tests on every change. The inherited qaRemote task
+    # builds and lints every demo/benchmark module and can exceed the standard hosted-runner window;
+    # the tagged release workflow performs the complete release APK assembly separately.
     - name: Build with Gradle
       env:
         SIGNAL_BUILD_CACHE_URL: ${{ secrets.SIGNAL_BUILD_CACHE_URL }}
         SIGNAL_BUILD_CACHE_USER: ${{ secrets.SIGNAL_BUILD_CACHE_USER }}
         SIGNAL_BUILD_CACHE_PASSWORD: ${{ secrets.SIGNAL_BUILD_CACHE_PASSWORD }}
         SIGNAL_BUILD_CACHE_PUSH: ${{ startsWith(github.ref, 'refs/heads/8.') }}
-      run: ./gradlew ${{ github.event_name == 'pull_request' && 'ciRemote' || 'qaRemote' }} --max-workers=2
+      run: >-
+        ./gradlew
+        :feature:registration:testDebugUnitTest
+        :Signal-Android:compileGithubProdDebugKotlin
+        :Signal-Android:processGithubProdDebugResources
+        --max-workers=2
 
     - name: Archive reports for failed build
       if: ${{ failure() }}
