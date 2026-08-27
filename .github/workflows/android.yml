@@ -66,18 +66,15 @@ jobs:
       if: ${{ steps.gradle-build.outcome == 'failure' }}
       run: |
         tail -n 200 gradle-build.log >> "$GITHUB_STEP_SUMMARY"
-        tail -n 80 gradle-build.log | awk '
-          { lines[NR] = $0 }
-          END {
-            for (i = NR; i >= 1 && emitted < 10; i--) {
-              if (lines[i] == "") continue
-              gsub(/%/, "%25", lines[i])
-              gsub(/\r/, "%0D", lines[i])
-              print "::error::" lines[i]
-              emitted++
-            }
+        awk '
+          /^\* What went wrong:/ { capture = 1 }
+          capture && NF {
+            gsub(/%/, "%25")
+            gsub(/\r/, "%0D")
+            print "::error::" $0
+            if (++emitted == 10) exit
           }
-        '
+        ' gradle-build.log
         exit 1
 
     - name: Archive reports for failed build
