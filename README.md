@@ -1,70 +1,25 @@
-# Signal Android
+# TKMChat Android
 
-Signal is a simple, powerful, and secure messenger that uses your phone's data connection (WiFi/4G/5G) to communicate securely.
+TKMChat is an AGPLv3 Android messenger fork based on Signal Android. New accounts use a registered TKMChain EmailVM mailbox such as `info@tkm` or `alice@john` instead of a telephone number.
 
-Millions of people use Signal every day for free and instantaneous communication anywhere in the world. Send and receive high-fidelity messages, participate in HD voice/video calls, and explore a growing set of new features that help you stay connected. 
+The Android package is `site.tkmchain.chat`, so TKMChat can be installed alongside Signal. Internal Java/Kotlin package names remain unchanged to keep upstream security fixes practical to merge.
 
-Signal’s advanced privacy-preserving technology is always enabled, so you can focus on sharing the moments that matter with the people who matter to you.
+## Current integration
 
-Currently available on the [Play Store](https://play.google.com/store/apps/details?id=org.thoughtcrime.securesms) and [signal.org](https://signal.org/android/apk/).
+- The registration client normalizes and validates TKM mailbox names.
+- The TKMChat service sends a one-time confirmation code to the registered encrypted EmailVM mailbox.
+- A successful challenge produces a short-lived, single-use token used to create an ACI-only account with PQ prekeys and no E.164 or PNI identity.
+- GitHub tags matching `tkmchat-v*` build, sign, verify, checksum, and publish release APKs on GitHub Actions with two Gradle workers.
+- The GitHub build flavor uses TKMChat hosts and cannot fall back to Signal domain-fronting infrastructure.
 
-<a href='https://play.google.com/store/apps/details?id=org.thoughtcrime.securesms&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' height='80px'/></a>
+See [docs/tkmchat-registration.md](docs/tkmchat-registration.md) for the server contract and security rules, and [docs/releases.md](docs/releases.md) for release setup.
 
-Also available on [iOS](https://github.com/signalapp/signal-ios) and [Desktop](https://github.com/signalapp/signal-desktop).
+## Important deployment requirement
 
-## Contributing Bug Reports
-We use GitHub for bug tracking. Please search the existing issues for your bug and create a new one if the issue is not yet tracked!
+This repository is the Android client. A compatible TKMChat messaging service must implement the mailbox verification and numberless registration endpoints before the APK can register or exchange messages. GTKm already supplies the canonical EmailVM mailbox registry through `tkmdomain_mailbox`; OTP state, registration tokens, and private keys must not be placed in GTKm RPC.
 
-https://github.com/signalapp/Signal-Android/issues
+## Upstream and license
 
-## Joining the Beta
-Want to live life on the bleeding edge and help out with testing?
+TKMChat is derived from [Signal Android](https://github.com/signalapp/Signal-Android). Signal is a trademark of Signal Messenger, LLC; TKMChat is an independent project and is not endorsed by Signal.
 
-You can subscribe to Signal Android Beta releases here:
-https://play.google.com/apps/testing/org.thoughtcrime.securesms
-
-If you're interested in a life of peace and tranquility, stick with the standard releases.
-
-## Contributing Translations
-Interested in helping translate Signal? Contribute here:
-
-https://community.signalusers.org/c/translation-feedback/
-
-## Contributing Code
-
-If you're new to the Signal codebase, we recommend going through our issues and picking out a simple bug to fix in order to get yourself familiar. Also please have a look at the [CONTRIBUTING.md](https://github.com/signalapp/Signal-Android/blob/main/CONTRIBUTING.md), that might answer some of your questions.
-
-For larger changes and feature ideas, we ask that you propose it on the [unofficial Community Forum](https://community.signalusers.org) for a high-level discussion with the wider community before implementation.
-
-## Contributing Ideas
-Have something you want to say about Signal projects or want to be part of the conversation? Get involved in the [community forum](https://community.signalusers.org).
-
-Help
-====
-## Support
-For troubleshooting and questions, please visit our support center!
-
-https://support.signal.org/
-
-## Documentation
-Looking for documentation? Check out the wiki!
-
-https://github.com/signalapp/Signal-Android/wiki
-
-# Legal things
-## Cryptography Notice
-
-This distribution includes cryptographic software. The country in which you currently reside may have restrictions on the import, possession, use, and/or re-export to another country, of encryption software.
-BEFORE using any encryption software, please check your country's laws, regulations and policies concerning the import, possession, or use, and re-export of encryption software, to see if this is permitted.
-See <http://www.wassenaar.org/> for more information.
-
-The U.S. Government Department of Commerce, Bureau of Industry and Security (BIS), has classified this software as Export Commodity Control Number (ECCN) 5D002.C.1, which includes information security software using or performing cryptographic functions with asymmetric algorithms.
-The form and manner of this distribution makes it eligible for export under the License Exception ENC Technology Software Unrestricted (TSU) exception (see the BIS Export Administration Regulations, Section 740.13) for both object code and source code.
-
-## License
-
-Copyright 2013 Signal Messenger, LLC
-
-Licensed under the GNU AGPLv3: https://www.gnu.org/licenses/agpl-3.0.html
-
-Google Play and the Google Play logo are trademarks of Google LLC.
+Copyright notices in upstream source files are retained. New TKMChat code is licensed under the GNU AGPLv3. See [LICENSE](LICENSE).

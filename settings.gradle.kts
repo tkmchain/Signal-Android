@@ -154,6 +154,7 @@ include(":benchmark")
 include(":baseline-profile")
 include(":microbenchmark")
 // App project name
+// Keep the internal Gradle module name for upstream build-script compatibility.
 project(":app").name = "Signal-Android"
 
-rootProject.name = "Signal"
+rootProject.name = "TKMChat"

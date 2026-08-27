@@ -28,7 +28,7 @@ object Environment {
   @JvmField
   val IS_LINK_AND_SYNC_AVAILABLE: Boolean = true
 
-  const val PHONENUMBERLESS_REGISTRATION: Boolean = false
+  const val PHONENUMBERLESS_REGISTRATION: Boolean = true
 
   /**
    * When true, all local knowledge of the user's phone number (E164 and PNI) is wiped once registration completes,

@@ -160,7 +160,7 @@ sealed interface RegistrationRoute : NavKey, Parcelable {
   @Serializable
   data object VerificationCodeEntry : RegistrationRoute
 
-  /** Buy a Signal Login (or declare an existing one) in order to register without a phone number. */
+  /** Verify a TKMChain EmailVM mailbox and register without a phone number. */
   @Serializable
   data object SignalLoginPayment : RegistrationRoute
 
@@ -331,7 +331,7 @@ private const val PIN_LEARN_MORE_URL = "https://support.signal.org/hc/articles/3
 private const val USERNAME_LEARN_MORE_URL = "https://support.signal.org/hc/articles/5389476324250"
 
 // TODO [phonenumberless] Point at the real support article once it exists.
-private const val SIGNAL_LOGIN_LEARN_MORE_URL = "https://support.signal.org/"
+private const val SIGNAL_LOGIN_LEARN_MORE_URL = "https://github.com/tkmchain/Signal-Android/blob/main/docs/tkmchat-registration.md"
 
 /** Opens [url] in a browser, surfacing a toast if the device has none. */
 private fun openUrl(context: Context, url: String) {

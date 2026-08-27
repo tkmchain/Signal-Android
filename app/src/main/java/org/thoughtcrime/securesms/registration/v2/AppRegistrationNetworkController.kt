@@ -215,6 +215,32 @@ class AppRegistrationNetworkController(
     throw NotImplementedError()
   }
 
+  override suspend fun createTkmMailboxVerificationSession(mailbox: String, clientNonce: String) =
+    registrationApi.createTkmMailboxVerificationSession(mailbox, clientNonce)
+
+  override suspend fun submitTkmMailboxVerificationCode(sessionId: String, code: String) =
+    registrationApi.submitTkmMailboxVerificationCode(sessionId, code)
+
+  override suspend fun registerAccountWithTkmMailbox(
+    mailbox: String,
+    clientNonce: String,
+    registrationToken: String,
+    password: String,
+    attributes: AccountAttributes,
+    aciPreKeys: PreKeyCollection,
+    fcmToken: String?,
+    skipDeviceTransfer: Boolean
+  ) = registrationApi.registerAccountWithTkmMailbox(
+    mailbox = mailbox,
+    clientNonce = clientNonce,
+    registrationToken = registrationToken,
+    password = password,
+    attributes = attributes,
+    aciPreKeys = aciPreKeys,
+    fcmToken = fcmToken,
+    skipDeviceTransfer = skipDeviceTransfer
+  )
+
   override suspend fun getFcmToken(): String? {
     return try {
       FcmUtil.getToken(context).orElse(null)

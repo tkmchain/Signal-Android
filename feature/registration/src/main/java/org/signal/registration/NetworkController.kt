@@ -42,6 +42,8 @@ import org.signal.network.api.RegistrationApiV2.SessionMetadata
 import org.signal.network.api.RegistrationApiV2.SetRestoreMethodError
 import org.signal.network.api.RegistrationApiV2.SubmitVerificationCodeError
 import org.signal.network.api.RegistrationApiV2.SvrCredentials
+import org.signal.network.api.RegistrationApiV2.TkmMailboxVerificationError
+import org.signal.network.api.RegistrationApiV2.TkmMailboxVerificationSession
 import org.signal.network.api.RegistrationApiV2.UpdateSessionError
 import org.signal.network.api.RegistrationApiV2.VerificationCodeTransport
 import org.signal.network.service.UsernameService.ConfirmUsernameError
@@ -154,6 +156,30 @@ interface NetworkController {
     fcmToken: String?,
     skipDeviceTransfer: Boolean
   ): RequestResult<RegisterAccountResponse, RegisterAccountWithoutPhoneNumberError>
+
+  /** Starts an EmailVM-delivered ownership challenge for a canonical TKM mailbox. */
+  suspend fun createTkmMailboxVerificationSession(mailbox: String, clientNonce: String): RequestResult<TkmMailboxVerificationSession, TkmMailboxVerificationError> {
+    throw UnsupportedOperationException("TKM mailbox verification is not configured")
+  }
+
+  /** Verifies the EmailVM-delivered code and returns a short-lived registration token. */
+  suspend fun submitTkmMailboxVerificationCode(sessionId: String, code: String): RequestResult<TkmMailboxVerificationSession, TkmMailboxVerificationError> {
+    throw UnsupportedOperationException("TKM mailbox verification is not configured")
+  }
+
+  /** Registers an ACI-only account and atomically binds it to a verified TKM mailbox. */
+  suspend fun registerAccountWithTkmMailbox(
+    mailbox: String,
+    clientNonce: String,
+    registrationToken: String,
+    password: String,
+    attributes: AccountAttributes,
+    aciPreKeys: PreKeyCollection,
+    fcmToken: String?,
+    skipDeviceTransfer: Boolean
+  ): RequestResult<RegisterAccountResponse, RegisterAccountWithoutPhoneNumberError> {
+    throw UnsupportedOperationException("TKM mailbox registration is not configured")
+  }
 
   /**
    * Retrieves an FCM token, if possible. Null means that this device does not support FCM.

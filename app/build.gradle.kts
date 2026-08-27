@@ -31,7 +31,7 @@ val staticIps = Properties().apply { file("static-ips.properties").reader().use 
 staticIps.stringPropertyNames().forEach { rootProject.extra[it] = staticIps.getProperty(it) }
 
 val canonicalVersionCode = 1741
-val canonicalVersionName = "8.25.0"
+val canonicalVersionName = "1.0.0"
 val currentHotfixVersion = 0
 val maxHotfixVersions = 100
 
@@ -58,6 +58,12 @@ val localProperties: Properties? = if (localPropertiesFile.exists()) {
 }
 val quickstartCredentialsDir: String? = localProperties?.getProperty("quickstart.credentials.dir")
 val benchmarkBackupFile: String? = localProperties?.getProperty("benchmark.backup.file")
+
+fun tkmChatEndpoint(environmentKey: String, fallback: String): String {
+  return System.getenv(environmentKey)?.takeIf(String::isNotBlank)
+    ?: localProperties?.getProperty(environmentKey.lowercase(Locale.ROOT).replace('_', '.'))?.takeIf(String::isNotBlank)
+    ?: fallback
+}
 
 val isInstrumentationTestRun = gradle.startParameter.taskNames.any { taskName ->
   val lower = taskName.lowercase()
@@ -240,6 +246,7 @@ android {
   }
 
   defaultConfig {
+    applicationId = "site.tkmchain.chat"
     if (currentHotfixVersion >= maxHotfixVersions) {
       throw AssertionError("Hotfix version offset is too large!")
     }
@@ -254,7 +261,7 @@ android {
     targetSdk = libs.versions.targetSdk.get().toInt()
 
     vectorDrawables.useSupportLibrary = true
-    project.ext.set("archivesBaseName", "Signal")
+    project.ext.set("archivesBaseName", "TKMChat")
 
     manifestPlaceholders["mapsKey"] = "AIzaSyCSx9xea86GwDKGznCAULE9Y5a8b-TfN9U"
 
@@ -307,6 +314,7 @@ android {
     buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"pk_live_6cmGZopuTsV8novGgJJW9JpC00vLIgtQ1D\"")
     buildConfigField("boolean", "TRACING_ENABLED", "false")
     buildConfigField("boolean", "LINK_DEVICE_UX_ENABLED", "false")
+    buildConfigField("boolean", "TKMCHAT_BUILD", "true")
 
     ndk {
       abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -459,6 +467,56 @@ android {
       buildConfigField("boolean", "MANAGES_APP_UPDATES", "false")
       buildConfigField("String", "APK_UPDATE_MANIFEST_URL", "null")
       buildConfigField("String", "BUILD_DISTRIBUTION_TYPE", "\"github\"")
+      buildConfigField("String", "SIGNAL_URL", "\"${tkmChatEndpoint("TKMCHAT_SERVICE_URL", "https://chat.tkmchain.site")}\"")
+      buildConfigField("String", "STORAGE_URL", "\"${tkmChatEndpoint("TKMCHAT_STORAGE_URL", "https://storage.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_CDN_URL", "\"${tkmChatEndpoint("TKMCHAT_CDN_URL", "https://cdn.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_CDN2_URL", "\"${tkmChatEndpoint("TKMCHAT_CDN2_URL", "https://cdn2.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_CDN3_URL", "\"${tkmChatEndpoint("TKMCHAT_CDN3_URL", "https://cdn3.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_CDSI_URL", "\"${tkmChatEndpoint("TKMCHAT_CDSI_URL", "https://cdsi.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_SVR2_URL", "\"${tkmChatEndpoint("TKMCHAT_SVR2_URL", "https://svr2.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_SFU_URL", "\"${tkmChatEndpoint("TKMCHAT_SFU_URL", "https://sfu.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_STAGING_SFU_URL", "\"${tkmChatEndpoint("TKMCHAT_SFU_URL", "https://sfu.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_SERVICE_STATUS_URL", "\"${tkmChatEndpoint("TKMCHAT_STATUS_HOST", "status.chat.tkmchain.site")}\"")
+      buildConfigField("String", "CONTENT_PROXY_HOST", "\"${tkmChatEndpoint("TKMCHAT_CONTENT_PROXY_HOST", "contentproxy.chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_CAPTCHA_URL", "\"${tkmChatEndpoint("TKMCHAT_CAPTCHA_URL", "https://chat.tkmchain.site/captcha/registration")}\"")
+      buildConfigField("String", "RECAPTCHA_PROOF_URL", "\"${tkmChatEndpoint("TKMCHAT_RECAPTCHA_URL", "https://chat.tkmchain.site/captcha/challenge")}\"")
+      buildConfigField("String", "BADGE_STATIC_ROOT", "\"https://chat.tkmchain.site/static/badges/\"")
+      buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"\"")
+      buildConfigField("String", "GIPHY_API_KEY", "\"\"")
+      buildConfigField("String[]", "SIGNAL_SERVICE_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_STORAGE_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_CDN_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_CDN2_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_CDN3_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_SFU_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_CONTENT_PROXY_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_CDSI_IPS", "new String[]{}")
+      buildConfigField("String[]", "SIGNAL_SVR2_IPS", "new String[]{}")
+      System.getenv("TKMCHAT_ZKGROUP_SERVER_PUBLIC_PARAMS")?.takeIf(String::isNotBlank)?.let {
+        buildConfigField("String", "ZKGROUP_SERVER_PUBLIC_PARAMS", "\"$it\"")
+      }
+      System.getenv("TKMCHAT_GENERIC_SERVER_PUBLIC_PARAMS")?.takeIf(String::isNotBlank)?.let {
+        buildConfigField("String", "GENERIC_SERVER_PUBLIC_PARAMS", "\"$it\"")
+      }
+      System.getenv("TKMCHAT_BACKUP_SERVER_PUBLIC_PARAMS")?.takeIf(String::isNotBlank)?.let {
+        buildConfigField("String", "BACKUP_SERVER_PUBLIC_PARAMS", "\"$it\"")
+      }
+      System.getenv("TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT")?.takeIf(String::isNotBlank)?.let {
+        buildConfigField("String[]", "UNIDENTIFIED_SENDER_TRUST_ROOTS", "new String[]{\"$it\"}")
+      }
+      System.getenv("TKMCHAT_SVR2_MRENCLAVE")?.takeIf(String::isNotBlank)?.let {
+        buildConfigField("String", "SVR2_MRENCLAVE", "\"$it\"")
+        buildConfigField("String", "SVR2_MRENCLAVE_LEGACY", "\"$it\"")
+      }
+      System.getenv("TKMCHAT_FIREBASE_APP_ID")?.takeIf(String::isNotBlank)?.let {
+        resValue("string", "google_app_id", it)
+      }
+      System.getenv("TKMCHAT_FIREBASE_SENDER_ID")?.takeIf(String::isNotBlank)?.let {
+        resValue("string", "gcm_defaultSenderId", it)
+      }
+      System.getenv("TKMCHAT_FIREBASE_WEB_CLIENT_ID")?.takeIf(String::isNotBlank)?.let {
+        resValue("string", "default_web_client_id", it)
+      }
     }
 
     create("nightly") {

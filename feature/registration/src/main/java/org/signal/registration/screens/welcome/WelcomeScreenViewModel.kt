@@ -65,7 +65,7 @@ class WelcomeScreenViewModel(
   fun applyEvent(state: WelcomeScreenState, event: WelcomeScreenEvents, parentEventEmitter: (RegistrationFlowEvent) -> Unit, stateEmitter: (WelcomeScreenState) -> Unit) {
     when (event) {
       is WelcomeScreenEvents.ParentStateChanged -> stateEmitter(applyParentState(state, event.parentState))
-      WelcomeScreenEvents.Continue -> navigateRequestingPermissions(RegistrationRoute.PhoneNumberEntry, parentEventEmitter)
+      WelcomeScreenEvents.Continue -> navigateRequestingPermissions(RegistrationRoute.SignalLoginPayment, parentEventEmitter)
       WelcomeScreenEvents.HasOldPhone -> navigateRequestingPermissions(RegistrationRoute.QuickRestoreQrScan, parentEventEmitter)
       WelcomeScreenEvents.DoesNotHaveOldPhone -> navigateRequestingPermissions(RegistrationRoute.ArchiveRestoreSelection.forManualRestore(), parentEventEmitter)
       WelcomeScreenEvents.LinkDevice -> {

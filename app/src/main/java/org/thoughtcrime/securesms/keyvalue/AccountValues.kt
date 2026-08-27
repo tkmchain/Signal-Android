@@ -50,6 +50,7 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
     private const val KEY_DEVICE_ID = "account.device_id"
     private const val KEY_PNI_REGISTRATION_ID = "account.pni_registration_id"
     private const val KEY_AUTH_CREDENTIAL_SALT = "account.auth_credential_salt"
+    private const val KEY_TKM_MAILBOX = "account.tkm_mailbox"
 
     private const val KEY_ACI_IDENTITY_PUBLIC_KEY = "account.aci_identity_public_key"
     private const val KEY_ACI_IDENTITY_PRIVATE_KEY = "account.aci_identity_private_key"
@@ -130,6 +131,7 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
       KEY_USERNAME,
       KEY_USERNAME_LINK_ENTROPY,
       KEY_USERNAME_LINK_SERVER_ID,
+      KEY_TKM_MAILBOX,
       KEY_ACCOUNT_ENTROPY_POOL
     )
   }
@@ -249,6 +251,11 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
   fun setE164(e164: String) {
     putString(KEY_E164, e164)
   }
+
+  /** Canonical EmailVM identity bound to this TKMChat ACI. */
+  var tkmMailbox: String?
+    get() = getString(KEY_TKM_MAILBOX, null).nullIfBlank()
+    set(value) = putString(KEY_TKM_MAILBOX, value.nullIfBlank())
 
   /** Wipes all local knowledge of the user's E164 and PNI, including the PNI identity and pre-key metadata. */
   fun clearE164AndPni() {

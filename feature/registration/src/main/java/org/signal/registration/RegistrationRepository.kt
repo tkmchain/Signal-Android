@@ -57,6 +57,8 @@ import org.signal.network.api.RegistrationApiV2.SessionMetadata
 import org.signal.network.api.RegistrationApiV2.SetRestoreMethodError
 import org.signal.network.api.RegistrationApiV2.SubmitVerificationCodeError
 import org.signal.network.api.RegistrationApiV2.SvrCredentials
+import org.signal.network.api.RegistrationApiV2.TkmMailboxVerificationError
+import org.signal.network.api.RegistrationApiV2.TkmMailboxVerificationSession
 import org.signal.network.api.RegistrationApiV2.UpdateSessionError
 import org.signal.network.api.RegistrationApiV2.VerificationCodeTransport
 import org.signal.network.service.UsernameService.ConfirmUsernameError
@@ -103,6 +105,18 @@ class RegistrationRepository(
       mcc = null,
       mnc = null
     )
+  }
+
+  suspend fun createTkmMailboxVerificationSession(mailbox: String, clientNonce: String): RequestResult<TkmMailboxVerificationSession, TkmMailboxVerificationError> = withContext(Dispatchers.IO) {
+    require(TkmMailbox.isValidClientNonce(clientNonce)) { "Invalid TKMChat client nonce" }
+    networkController.createTkmMailboxVerificationSession(TkmMailbox.normalize(mailbox), clientNonce)
+  }
+
+  suspend fun submitTkmMailboxVerificationCode(
+    sessionId: String,
+    code: String
+  ): RequestResult<TkmMailboxVerificationSession, TkmMailboxVerificationError> = withContext(Dispatchers.IO) {
+    networkController.submitTkmMailboxVerificationCode(sessionId, code)
   }
 
   suspend fun requestVerificationCode(
@@ -338,6 +352,95 @@ class RegistrationRepository(
     skipDeviceTransfer: Boolean = true
   ): RequestResult<Pair<RegisterAccountResponse, KeyMaterial>, RegisterAccountError> = withContext(Dispatchers.IO) {
     registerAccount(e164, sessionId, recoveryPassword = null, registrationLock, skipDeviceTransfer)
+  }
+
+  /**
+   * Generates an ACI-only, post-quantum-capable account and binds it to a mailbox
+   * whose short-lived registration token was issued by the TKMChat service.
+   */
+  suspend fun registerAccountWithTkmMailbox(
+    mailbox: String,
+    clientNonce: String,
+    registrationToken: String,
+    skipDeviceTransfer: Boolean = true
+  ): RequestResult<Pair<RegisterAccountResponse, KeyMaterial>, org.signal.network.api.RegistrationApiV2.RegisterAccountWithoutPhoneNumberError> = withContext(Dispatchers.IO) {
+    val canonicalMailbox = TkmMailbox.normalize(mailbox)
+    require(TkmMailbox.isValid(canonicalMailbox)) { "Invalid TKM mailbox" }
+    require(TkmMailbox.isValidClientNonce(clientNonce)) { "Invalid TKMChat client nonce" }
+
+    val inProgressData = storageController.readInProgressRegistrationData()
+    val resumedAciIdentityKeyPair = inProgressData.accountData?.aciIdentityKeyPair?.takeIf { it.size > 0 }?.let { IdentityKeyPair(it.toByteArray()) }
+    val resumedProfileKey = inProgressData.profileKey.takeIf { it.size > 0 }?.let { ProfileKey(it.toByteArray()) }
+    val keyMaterial = generateKeyMaterial(
+      existingAciIdentityKeyPair = resumedAciIdentityKeyPair,
+      profileKey = resumedProfileKey,
+      includePniKeyMaterial = false
+    )
+
+    storageController.updateInProgressRegistrationData {
+      this.profileKey = keyMaterial.profileKey.toByteString()
+      this.accountEntropyPool = keyMaterial.accountEntropyPool.value
+    }
+    updateAccountData {
+      this.aciIdentityKeyPair = keyMaterial.aciIdentityKeyPair.serialize().toByteString()
+      this.aciSignedPreKey = keyMaterial.aciSignedPreKey.serialize().toByteString()
+      this.aciLastResortKyberPreKey = keyMaterial.aciLastResortKyberPreKey.serialize().toByteString()
+      this.aciRegistrationId = keyMaterial.aciRegistrationId
+      this.unidentifiedAccessKey = keyMaterial.unidentifiedAccessKey.toByteString()
+      this.servicePassword = keyMaterial.servicePassword
+      this.tkmMailbox = canonicalMailbox
+    }
+
+    val fcmToken = networkController.getFcmToken()
+    updateAccountData { this.fetchesMessages = fcmToken == null }
+
+    val accountAttributes = AccountAttributes(
+      signalingKey = null,
+      registrationId = keyMaterial.aciRegistrationId,
+      voice = true,
+      video = true,
+      fetchesMessages = fcmToken == null,
+      registrationLock = null,
+      unidentifiedAccessKey = keyMaterial.unidentifiedAccessKey,
+      unrestrictedUnidentifiedAccess = false,
+      discoverableByPhoneNumber = null,
+      capabilities = getAccountCapabilities(optionalPhoneNumber = true),
+      pniRegistrationId = null,
+      recoveryPassword = keyMaterial.accountEntropyPool.deriveMasterKey().deriveRegistrationRecoveryPassword()
+    )
+    val aciPreKeys = PreKeyCollection(
+      identityKey = keyMaterial.aciIdentityKeyPair.publicKey,
+      signedPreKey = keyMaterial.aciSignedPreKey,
+      lastResortKyberPreKey = keyMaterial.aciLastResortKyberPreKey
+    )
+
+    val result = networkController.registerAccountWithTkmMailbox(
+      mailbox = canonicalMailbox,
+      clientNonce = clientNonce,
+      registrationToken = registrationToken,
+      password = keyMaterial.servicePassword,
+      attributes = accountAttributes,
+      aciPreKeys = aciPreKeys,
+      fcmToken = fcmToken,
+      skipDeviceTransfer = skipDeviceTransfer
+    )
+
+    if (result is RequestResult.Success) {
+      check(result.result.e164 == null) { "TKM mailbox registration unexpectedly returned an e164" }
+      check(result.result.pni == null) { "TKM mailbox registration unexpectedly returned a PNI" }
+      updateAccountData {
+        this.e164 = null
+        this.aci = result.result.aci
+        this.pni = null
+        this.servicePassword = keyMaterial.servicePassword
+        this.reRegistration = result.result.reregistration
+        this.authCredentialSalt = result.result.authCredentialSalt?.let { Base64.decode(it).toByteString() }
+        this.tkmMailbox = canonicalMailbox
+      }
+      storageController.commitRegistrationData()
+    }
+
+    result.map { it to keyMaterial }
   }
 
   /**
@@ -1139,14 +1242,14 @@ class RegistrationRepository(
     return Base64.encodeWithPadding(passwordBytes)
   }
 
-  fun getAccountCapabilities(): AccountAttributes.Capabilities {
+  fun getAccountCapabilities(optionalPhoneNumber: Boolean = false): AccountAttributes.Capabilities {
     return AccountAttributes.Capabilities(
       storage = true, // True initially -- can turn off later if users opt-out
       versionedExpirationTimer = true,
       attachmentBackfill = true,
       spqr = true,
       usernameChangeSyncMessage = true,
-      optionalPhoneNumber = false
+      optionalPhoneNumber = optionalPhoneNumber
     )
   }
 

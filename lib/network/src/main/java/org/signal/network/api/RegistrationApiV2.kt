@@ -491,6 +491,128 @@ class RegistrationApiV2(
   }
 
   /**
+   * Starts ownership verification for a mailbox registered in TKMChain EmailVM.
+   * The service must resolve the canonical mailbox on chain and deliver a one-time
+   * code to that mailbox. It must never return the code in this response.
+   *
+   * `POST /v1/tkmchat/verification/session`
+   */
+  suspend fun createTkmMailboxVerificationSession(mailbox: String, clientNonce: String): RequestResult<TkmMailboxVerificationSession, TkmMailboxVerificationError> {
+    check(phonenumberlessRegistrationAllowed) { "TKM mailbox registration is not allowed in this build!" }
+
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.POST,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/verification/session",
+        body = CreateTkmMailboxVerificationSessionRequestBody(mailbox, clientNonce).toJsonRequestBody()
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmMailboxVerificationSession>(it.bodyString()) },
+      mapError = ::mapTkmMailboxVerificationError
+    )
+  }
+
+  /**
+   * Verifies the one-time code delivered to a TKM mailbox. A successful response
+   * contains a short-lived, single-use registration token, never a reusable chain key.
+   *
+   * `PUT /v1/tkmchat/verification/session/{session-id}/code`
+   */
+  suspend fun submitTkmMailboxVerificationCode(sessionId: String, code: String): RequestResult<TkmMailboxVerificationSession, TkmMailboxVerificationError> {
+    check(phonenumberlessRegistrationAllowed) { "TKM mailbox registration is not allowed in this build!" }
+    val encodedSessionId = URLEncoder.encode(sessionId, Charsets.UTF_8.name())
+
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.PUT,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/verification/session/$encodedSessionId/code",
+        body = SubmitVerificationCodeRequestBody(code).toJsonRequestBody()
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmMailboxVerificationSession>(it.bodyString()) },
+      mapError = ::mapTkmMailboxVerificationError
+    )
+  }
+
+  /**
+   * Registers a numberless account after TKM mailbox ownership has been verified.
+   * The server must atomically consume [registrationToken] and bind [mailbox] to the
+   * returned ACI. PNI fields are deliberately omitted.
+   *
+   * `POST /v1/tkmchat/registration`
+   */
+  suspend fun registerAccountWithTkmMailbox(
+    mailbox: String,
+    clientNonce: String,
+    registrationToken: String,
+    password: String,
+    attributes: AccountAttributes,
+    aciPreKeys: PreKeyCollection,
+    fcmToken: String?,
+    skipDeviceTransfer: Boolean
+  ): RequestResult<RegisterAccountResponse, RegisterAccountWithoutPhoneNumberError> {
+    check(phonenumberlessRegistrationAllowed) { "TKM mailbox registration is not allowed in this build!" }
+    require(attributes.pniRegistrationId == null) { "Must not send PNI key material for a TKM mailbox account." }
+    require(attributes.discoverableByPhoneNumber == null) { "Must not set phone number discoverability for a TKM mailbox account." }
+
+    val body = RegisterAccountRequestBody(
+      tkmMailbox = mailbox,
+      tkmClientNonce = clientNonce,
+      tkmRegistrationToken = registrationToken,
+      accountAttributes = attributes,
+      aciIdentityKey = Base64.encodeWithoutPadding(aciPreKeys.identityKey.serialize()),
+      pniIdentityKey = null,
+      aciSignedPreKey = aciPreKeys.signedPreKey.toSignedPreKeyEntity(),
+      pniSignedPreKey = null,
+      aciPqLastResortPreKey = aciPreKeys.lastResortKyberPreKey.toKyberPreKeyEntity(),
+      pniPqLastResortPreKey = null,
+      gcmToken = if (attributes.fetchesMessages) null else fcmToken?.let { GcmRegistrationId(it, true) },
+      skipDeviceTransfer = skipDeviceTransfer
+    )
+
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.POST,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/registration",
+        body = body.toJsonRequestBodyOmittingNulls(),
+        auth = RequestSpec.Auth.Header("Authorization", basicAuth(NO_NUMBER_AUTH_USERNAME, password))
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<RegisterAccountResponse>(it.bodyString()) },
+      mapError = { error ->
+        when (error.statusCode) {
+          400, 401 -> RegisterAccountWithoutPhoneNumberError.InvalidAuthorizationToken(error.bodyString())
+          409 -> RegisterAccountWithoutPhoneNumberError.DeviceTransferPossible
+          422 -> RegisterAccountWithoutPhoneNumberError.InvalidRequest(error.bodyString())
+          429 -> RegisterAccountWithoutPhoneNumberError.RateLimited(error.retryAfter())
+          499 -> RegisterAccountWithoutPhoneNumberError.PostQuantumRatchetRequired
+          else -> null
+        }
+      }
+    )
+  }
+
+  private fun mapTkmMailboxVerificationError(error: RestStatusCodeError): TkmMailboxVerificationError? {
+    return when (error.statusCode) {
+      400, 422 -> TkmMailboxVerificationError.InvalidRequest(error.bodyString())
+      401 -> TkmMailboxVerificationError.IncorrectCode
+      404 -> TkmMailboxVerificationError.MailboxOrSessionNotFound
+      409 -> TkmMailboxVerificationError.MailboxAlreadyRegistered
+      429 -> TkmMailboxVerificationError.RateLimited(error.retryAfter())
+      else -> null
+    }
+  }
+
+  /**
    * Validates the provided SVR2 auth credentials, returning information on their usability.
    *
    * `POST /v2/svr/auth/check`
@@ -652,6 +774,21 @@ class RegistrationApiV2(
     val verified: Boolean
   ) {
     override fun toString(): String = "SessionMetadata(id=${id.censor()}, nextSms=$nextSms, nextCall=$nextCall, nextVerificationAttempt=$nextVerificationAttempt, allowedToRequestCode=$allowedToRequestCode, requestedInformation=$requestedInformation, verified=$verified)"
+  }
+
+  /** Public, non-secret state for a TKM mailbox verification attempt. */
+  @Serializable
+  data class TkmMailboxVerificationSession(
+    val sessionId: String,
+    val mailbox: String,
+    val expiresAt: Long,
+    val verified: Boolean = false,
+    val registrationToken: String? = null,
+    val retryAfterSeconds: Long? = null
+  ) {
+    override fun toString(): String {
+      return "TkmMailboxVerificationSession(sessionId=${sessionId.censor()}, mailbox=${mailbox.censor()}, expiresAt=$expiresAt, verified=$verified, registrationToken=${registrationToken?.censor()}, retryAfterSeconds=$retryAfterSeconds)"
+    }
   }
 
   @OptIn(ExperimentalSerializationApi::class)
@@ -880,6 +1017,12 @@ class RegistrationApiV2(
     val code: String
   )
 
+  @Serializable
+  private class CreateTkmMailboxVerificationSessionRequestBody(
+    val mailbox: String,
+    val clientNonce: String
+  )
+
   /** The PNI properties are all null when registering an account that has no phone number, in which case they are omitted from the request. */
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
@@ -887,6 +1030,9 @@ class RegistrationApiV2(
     val sessionId: String? = null,
     val recoveryPassword: String? = null,
     val receiptCredentialPresentation: String? = null,
+    val tkmMailbox: String? = null,
+    val tkmClientNonce: String? = null,
+    val tkmRegistrationToken: String? = null,
     val totp: Int? = null,
     val accountAttributes: AccountAttributes,
     val aciIdentityKey: String,
@@ -1007,12 +1153,21 @@ class RegistrationApiV2(
 
   sealed class RegisterAccountWithoutPhoneNumberError : BadRequestError {
     data class InvalidReceiptCredentialPresentation(val message: String) : RegisterAccountWithoutPhoneNumberError()
+    data class InvalidAuthorizationToken(val message: String) : RegisterAccountWithoutPhoneNumberError()
     data object DeviceTransferPossible : RegisterAccountWithoutPhoneNumberError()
     data class InvalidRequest(val message: String) : RegisterAccountWithoutPhoneNumberError()
     data class RateLimited(val retryAfter: Duration) : RegisterAccountWithoutPhoneNumberError()
 
     /** The service requires that the registering client support the post-quantum ratchet. */
     data object PostQuantumRatchetRequired : RegisterAccountWithoutPhoneNumberError()
+  }
+
+  sealed class TkmMailboxVerificationError : BadRequestError {
+    data class InvalidRequest(val message: String) : TkmMailboxVerificationError()
+    data object IncorrectCode : TkmMailboxVerificationError()
+    data object MailboxOrSessionNotFound : TkmMailboxVerificationError()
+    data object MailboxAlreadyRegistered : TkmMailboxVerificationError()
+    data class RateLimited(val retryAfter: Duration) : TkmMailboxVerificationError()
   }
 
   sealed class CreateLoginReceiptCredentialError : BadRequestError {

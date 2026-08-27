@@ -293,6 +293,10 @@ class SignalServiceNetworkAccess(context: Context) {
   }
 
   fun getConfiguration(e164: String?): SignalServiceConfiguration {
+    if (BuildConfig.TKMCHAT_BUILD) {
+      return uncensoredConfiguration
+    }
+
     if (e164 == null || SignalStore.proxy.isProxyEnabled) {
       return uncensoredConfiguration
     }

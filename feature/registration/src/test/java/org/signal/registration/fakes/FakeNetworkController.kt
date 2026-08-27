@@ -346,6 +346,21 @@ class FakeNetworkController(
     skipDeviceTransfer: Boolean
   ): RequestResult<RegisterAccountResponse, RegisterAccountWithoutPhoneNumberError> = notExpected()
 
+  override suspend fun createTkmMailboxVerificationSession(mailbox: String, clientNonce: String) = notExpected()
+
+  override suspend fun submitTkmMailboxVerificationCode(sessionId: String, code: String) = notExpected()
+
+  override suspend fun registerAccountWithTkmMailbox(
+    mailbox: String,
+    clientNonce: String,
+    registrationToken: String,
+    password: String,
+    attributes: AccountAttributes,
+    aciPreKeys: PreKeyCollection,
+    fcmToken: String?,
+    skipDeviceTransfer: Boolean
+  ) = notExpected()
+
   override suspend fun getFcmToken(): String? = fcmToken
 
   override suspend fun awaitPushChallengeToken(): String? = pushChallengeToken

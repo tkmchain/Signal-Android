@@ -53,6 +53,9 @@ message AccountData {
 
   // Salt used by the service to generate PNI auth credentials. Only present for an account registered without a phone number.
   optional bytes authCredentialSalt = 17;
+
+  // Canonical EmailVM identity for a TKMChat account. Absent on upstream phone accounts.
+  optional string tkmMailbox = 18;
 }
 
 message SvrCredential {

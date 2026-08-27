@@ -806,6 +806,9 @@ class AppRegistrationStorageController(private val context: Context) : StorageCo
     if (e164 != null) {
       SignalStore.account.setE164(e164)
     }
+    accountData.tkmMailbox?.nullIfBlank()?.let {
+      SignalStore.account.tkmMailbox = it
+    }
 
     val now = System.currentTimeMillis()
     saveOwnIdentityKey(selfId, aci, aciProtocolStore, now)

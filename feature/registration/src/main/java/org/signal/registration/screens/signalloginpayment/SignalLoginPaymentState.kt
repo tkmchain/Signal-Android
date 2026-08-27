@@ -1,39 +1,46 @@
 /*
- * Copyright 2026 Signal Messenger, LLC
+ * Copyright 2026 TKMChain contributors
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
 package org.signal.registration.screens.signalloginpayment
 
-/**
- * State for the Signal Login purchase screen, where the user either buys a Signal Login or indicates they already have
- * one.
- */
+import org.signal.core.util.censor
+import org.signal.registration.TkmMailbox
+
 data class SignalLoginPaymentState(
-  val selectedOption: Option = Option.Purchase,
-  /**
-   * Localized, currency-formatted price of the one-time purchase, as reported by the billing library. Null until the
-   * price has been loaded.
-   */
-  val formattedPrice: String? = null,
+  val clientNonce: String = "",
+  val mailbox: String = "",
+  val verificationCode: String = "",
+  val sessionId: String? = null,
+  val phase: Phase = Phase.Mailbox,
   val showSpinner: Boolean = false,
+  val inlineError: Error? = null,
   val dialogs: Dialogs = Dialogs()
 ) {
-  /** Whether we know enough to let the user act on the selected option. */
   val isActionEnabled: Boolean
-    get() = !showSpinner && (selectedOption == Option.ExistingLogin || formattedPrice != null)
+    get() = clientNonce.length == 64 && !showSpinner && when (phase) {
+      Phase.Mailbox -> TkmMailbox.isValid(mailbox)
+      Phase.Code -> verificationCode.length in 6..12 && verificationCode.all(Char::isDigit) && sessionId != null
+    }
 
-  enum class Option {
-    /** Buy a new Signal Login. */
-    Purchase,
+  override fun toString(): String {
+    return "SignalLoginPaymentState(clientNonce=${clientNonce.censor()}, mailbox=${mailbox.censor()}, verificationCode=${verificationCode.censor()}, sessionId=${sessionId?.censor()}, phase=$phase, showSpinner=$showSpinner, inlineError=$inlineError, dialogs=$dialogs)"
+  }
 
-    /** Register with an account key the user already owns. */
-    ExistingLogin
+  enum class Phase { Mailbox, Code }
+
+  enum class Error {
+    InvalidMailbox,
+    MailboxNotFound,
+    MailboxAlreadyRegistered,
+    IncorrectCode,
+    RegistrationRejected,
+    RateLimited
   }
 
   data class Dialogs(
     val networkError: Boolean = false,
-    val unknownError: Boolean = false,
-    val purchaseFailed: Boolean = false
+    val unknownError: Boolean = false
   )
 }

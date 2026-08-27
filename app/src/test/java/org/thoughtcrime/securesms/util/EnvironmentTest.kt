@@ -7,6 +7,7 @@ package org.thoughtcrime.securesms.util
 
 import assertk.assertThat
 import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import org.junit.Test
 
 /**
@@ -14,13 +15,9 @@ import org.junit.Test
  */
 class EnvironmentTest {
 
-  /**
-   * The phone-numberless registration flow is incomplete. If this test fails, someone left the flag enabled after
-   * testing locally. Do not "fix" it by updating the test.
-   */
   @Test
-  fun `phone-numberless registration is disabled`() {
-    assertThat(Environment.PHONENUMBERLESS_REGISTRATION).isFalse()
+  fun `TKM mailbox registration is enabled`() {
+    assertThat(Environment.PHONENUMBERLESS_REGISTRATION).isTrue()
   }
 
   @Test
