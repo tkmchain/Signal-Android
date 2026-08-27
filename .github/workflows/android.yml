@@ -67,12 +67,20 @@ jobs:
       run: |
         tail -n 200 gradle-build.log >> "$GITHUB_STEP_SUMMARY"
         awk '
-          /^\* What went wrong:/ { capture = 1 }
-          capture && NF {
-            gsub(/%/, "%25")
-            gsub(/\r/, "%0D")
-            print "::error::" $0
-            if (++emitted == 10) exit
+          {
+            lines[NR] = $0
+            if (failed_test == 0 && $0 ~ / FAILED$/) failed_test = NR
+            if (what_went_wrong == 0 && $0 ~ /^\* What went wrong:/) what_went_wrong = NR
+          }
+          END {
+            start = failed_test > 0 ? failed_test : what_went_wrong
+            for (i = start; i <= NR && emitted < 10; i++) {
+              if (lines[i] == "") continue
+              gsub(/%/, "%25", lines[i])
+              gsub(/\r/, "%0D", lines[i])
+              print "::error::" lines[i]
+              emitted++
+            }
           }
         ' gradle-build.log
         exit 1
