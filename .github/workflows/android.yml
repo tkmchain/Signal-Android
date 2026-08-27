@@ -58,7 +58,7 @@ jobs:
         ./gradlew :feature:registration:testDebugUnitTest --max-workers=2 2>&1 | tee registration-tests.log
 
     - name: Report registration test errors
-      if: ${{ steps.registration-tests.outcome == 'failure' }}
+      if: ${{ steps.registration-tests.conclusion == 'failure' }}
       run: |
         tail -n 200 registration-tests.log >> "$GITHUB_STEP_SUMMARY"
         awk '
@@ -98,7 +98,7 @@ jobs:
           --max-workers=2 2>&1 | tee app-build.log
 
     - name: Report app compilation errors
-      if: ${{ steps.app-build.outcome == 'failure' }}
+      if: ${{ steps.app-build.conclusion == 'failure' }}
       run: |
         tail -n 200 app-build.log >> "$GITHUB_STEP_SUMMARY"
         awk '
