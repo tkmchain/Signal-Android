@@ -47,17 +47,34 @@ jobs:
     # builds and lints every demo/benchmark module and can exceed the standard hosted-runner window;
     # the tagged release workflow performs the complete release APK assembly separately.
     - name: Build with Gradle
+      id: gradle-build
+      continue-on-error: true
       env:
         SIGNAL_BUILD_CACHE_URL: ${{ secrets.SIGNAL_BUILD_CACHE_URL }}
         SIGNAL_BUILD_CACHE_USER: ${{ secrets.SIGNAL_BUILD_CACHE_USER }}
         SIGNAL_BUILD_CACHE_PASSWORD: ${{ secrets.SIGNAL_BUILD_CACHE_PASSWORD }}
         SIGNAL_BUILD_CACHE_PUSH: ${{ startsWith(github.ref, 'refs/heads/8.') }}
-      run: >-
-        ./gradlew
-        :feature:registration:testDebugUnitTest
-        :Signal-Android:compileGithubProdDebugKotlin
-        :Signal-Android:processGithubProdDebugResources
-        --max-workers=2
+      run: |
+        set -o pipefail
+        ./gradlew \
+          :feature:registration:testDebugUnitTest \
+          :Signal-Android:compileGithubProdDebugKotlin \
+          :Signal-Android:processGithubProdDebugResources \
+          --max-workers=2 2>&1 | tee gradle-build.log
+
+    - name: Report Gradle errors
+      if: ${{ steps.gradle-build.outcome == 'failure' }}
+      run: |
+        tail -n 200 gradle-build.log >> "$GITHUB_STEP_SUMMARY"
+        awk '
+          /(^e: |error:|FAILURE:|What went wrong|Execution failed for task|Unresolved reference|Cannot access|Type mismatch|does not override|Compilation error)/ {
+            gsub(/%/, "%25")
+            gsub(/\r/, "%0D")
+            print "::error::" $0
+            if (++matches == 50) exit
+          }
+        ' gradle-build.log
+        exit 1
 
     - name: Archive reports for failed build
       if: ${{ failure() }}
