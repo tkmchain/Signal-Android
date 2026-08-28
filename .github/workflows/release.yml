@@ -51,15 +51,28 @@ jobs:
           SEALED_SENDER_ROOT: ${{ vars.TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT }}
           SVR2_MRENCLAVE: ${{ vars.TKMCHAT_SVR2_MRENCLAVE }}
         run: |
-          test -n "$RELEASE_KEYSTORE"
-          test -n "$RELEASE_STORE_PASSWORD"
-          test -n "$RELEASE_KEY_ALIAS"
-          test -n "$RELEASE_KEY_PASSWORD"
-          test -n "$ZKGROUP_PARAMS"
-          test -n "$GENERIC_PARAMS"
-          test -n "$BACKUP_PARAMS"
-          test -n "$SEALED_SENDER_ROOT"
-          test -n "$SVR2_MRENCLAVE"
+          set -euo pipefail
+          missing=0
+          require_value() {
+            name="$1"
+            value="$2"
+            if [ -z "$value" ]; then
+              echo "::error::$name is required for a signed TKMChat release"
+              missing=1
+            fi
+          }
+          require_value TKMCHAT_RELEASE_KEYSTORE_BASE64 "$RELEASE_KEYSTORE"
+          require_value TKMCHAT_RELEASE_STORE_PASSWORD "$RELEASE_STORE_PASSWORD"
+          require_value TKMCHAT_RELEASE_KEY_ALIAS "$RELEASE_KEY_ALIAS"
+          require_value TKMCHAT_RELEASE_KEY_PASSWORD "$RELEASE_KEY_PASSWORD"
+          require_value TKMCHAT_ZKGROUP_SERVER_PUBLIC_PARAMS "$ZKGROUP_PARAMS"
+          require_value TKMCHAT_GENERIC_SERVER_PUBLIC_PARAMS "$GENERIC_PARAMS"
+          require_value TKMCHAT_BACKUP_SERVER_PUBLIC_PARAMS "$BACKUP_PARAMS"
+          require_value TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT "$SEALED_SENDER_ROOT"
+          require_value TKMCHAT_SVR2_MRENCLAVE "$SVR2_MRENCLAVE"
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Build release APKs
         env:

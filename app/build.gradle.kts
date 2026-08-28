@@ -467,7 +467,7 @@ android {
       buildConfigField("boolean", "MANAGES_APP_UPDATES", "false")
       buildConfigField("String", "APK_UPDATE_MANIFEST_URL", "null")
       buildConfigField("String", "BUILD_DISTRIBUTION_TYPE", "\"github\"")
-      buildConfigField("String", "SIGNAL_URL", "\"${tkmChatEndpoint("TKMCHAT_SERVICE_URL", "https://chat.tkmchain.site")}\"")
+      buildConfigField("String", "SIGNAL_URL", "\"${tkmChatEndpoint("TKMCHAT_SERVICE_URL", "https://wallet.tkmchain.site")}\"")
       buildConfigField("String", "STORAGE_URL", "\"${tkmChatEndpoint("TKMCHAT_STORAGE_URL", "https://storage.chat.tkmchain.site")}\"")
       buildConfigField("String", "SIGNAL_CDN_URL", "\"${tkmChatEndpoint("TKMCHAT_CDN_URL", "https://cdn.chat.tkmchain.site")}\"")
       buildConfigField("String", "SIGNAL_CDN2_URL", "\"${tkmChatEndpoint("TKMCHAT_CDN2_URL", "https://cdn2.chat.tkmchain.site")}\"")

@@ -14,7 +14,20 @@ TKMChat uses an existing TKMChain EmailVM mailbox as the human-readable account 
 
 ## Service API contract
 
-All endpoints are served by the TKMChat messaging service configured as `TKMCHAT_SERVICE_URL`.
+All endpoints are served by the TKMChat messaging service configured as `TKMCHAT_SERVICE_URL`. The GitHub flavor defaults to `https://wallet.tkmchain.site` so first-release APKs do not depend on a separate `chat.tkmchain.site` DNS record. Put the registration service behind nginx at `/v1/tkmchat/` on that host, or set `TKMCHAT_SERVICE_URL` to another HTTPS origin before building.
+
+Example nginx route:
+
+```nginx
+location /v1/tkmchat/ {
+    proxy_pass http://127.0.0.1:8791/v1/tkmchat/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
 
 ### Create a challenge
 

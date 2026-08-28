@@ -14,7 +14,7 @@ Back up the keystore and passwords offline. Losing this key prevents upgrade ins
 
 ## Optional GitHub repository variables
 
-The workflow accepts `TKMCHAT_SERVICE_URL`, `TKMCHAT_STORAGE_URL`, `TKMCHAT_CDN_URL`, `TKMCHAT_CDN2_URL`, `TKMCHAT_CDN3_URL`, `TKMCHAT_CDSI_URL`, `TKMCHAT_SVR2_URL`, `TKMCHAT_SFU_URL`, `TKMCHAT_STATUS_HOST`, `TKMCHAT_CONTENT_PROXY_HOST`, `TKMCHAT_CAPTCHA_URL`, and `TKMCHAT_RECAPTCHA_URL`. TKMChain host defaults are compiled when an endpoint variable is unset or empty.
+The workflow accepts `TKMCHAT_SERVICE_URL`, `TKMCHAT_STORAGE_URL`, `TKMCHAT_CDN_URL`, `TKMCHAT_CDN2_URL`, `TKMCHAT_CDN3_URL`, `TKMCHAT_CDSI_URL`, `TKMCHAT_SVR2_URL`, `TKMCHAT_SFU_URL`, `TKMCHAT_STATUS_HOST`, `TKMCHAT_CONTENT_PROXY_HOST`, `TKMCHAT_CAPTCHA_URL`, and `TKMCHAT_RECAPTCHA_URL`. TKMChain host defaults are compiled when an endpoint variable is unset or empty. The GitHub flavor defaults `TKMCHAT_SERVICE_URL` to `https://wallet.tkmchain.site`; serve `/v1/tkmchat/` from that host or override the variable before tagging.
 
 The TKMChat server deployment must generate and publish these cryptographic values as GitHub repository variables: `TKMCHAT_ZKGROUP_SERVER_PUBLIC_PARAMS`, `TKMCHAT_GENERIC_SERVER_PUBLIC_PARAMS`, `TKMCHAT_BACKUP_SERVER_PUBLIC_PARAMS`, `TKMCHAT_UNIDENTIFIED_SENDER_TRUST_ROOT`, and `TKMCHAT_SVR2_MRENCLAVE`. The release workflow refuses to publish if any is absent, preventing an apparently independent APK from accidentally shipping Signal production server parameters.
 
