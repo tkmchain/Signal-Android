@@ -187,6 +187,18 @@ Persist an encrypted message:
 }
 ```
 
+### Android send enforcement
+
+TKMChat Android enforces the network policy before inserting a message into the local outbox:
+
+- if the local account has no `tkmMailbox`, the normal legacy Signal path is left unchanged;
+- if `GET /v1/tkmchat/peers` reports zero connected GTKm peers, the app blocks the send and shows a local warning;
+- group and distribution-list messages are free once peers exist;
+- one-to-one messages must resolve the recipient as a TKMChat account;
+- if the recipient account has `personalChatPriceWei > 0`, the app blocks the send until a shield2 payment transaction hash is available.
+
+The Android app does not upload plaintext message bodies to the TKMChat service. The `/v1/tkmchat/messages` endpoint is only for encrypted payloads or transaction-backed message records.
+
 ## GTKm RPC dependency
 
 Mailbox existence, owner, registry hash, and encryption-key publication are durable chain facts and are queryable through GTKm. The registration bridge also depends on `emailvm_deliverOTP` so the daemon performs the actual mailbox delivery. OTP sessions, hashes, registration tokens, and TKMChat account bindings still belong to the TKMChat service and must not become consensus state.

@@ -634,13 +634,14 @@ class RegistrationApiV2(
     )
   }
 
-  suspend fun updateTkmChatAccount(mailbox: String, shield2PaymentCode: String?, personalChatPriceWei: String): RequestResult<TkmChatAccount, TkmChatServiceError> {
+  suspend fun updateTkmChatAccount(mailbox: String, shield2PaymentCode: String?, personalChatPriceWei: String, accountUpdateToken: String): RequestResult<TkmChatAccount, TkmChatServiceError> {
     val encoded = URLEncoder.encode(mailbox, Charsets.UTF_8.name())
     val result = restClient.request(
       RequestSpec(
         method = RequestSpec.Method.PUT,
         host = RequestSpec.Host.Service,
         path = "/v1/tkmchat/account/$encoded",
+        auth = RequestSpec.Auth.Header("Authorization", "Bearer $accountUpdateToken"),
         body = UpdateTkmChatAccountRequestBody(shield2PaymentCode, personalChatPriceWei).toJsonRequestBodyOmittingNulls()
       )
     )

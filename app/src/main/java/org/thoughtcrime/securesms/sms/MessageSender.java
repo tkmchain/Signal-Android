@@ -65,6 +65,7 @@ import org.thoughtcrime.securesms.mms.OutgoingMessage;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientId;
 import org.thoughtcrime.securesms.recipients.RecipientUtil;
+import org.thoughtcrime.securesms.tkmchat.TkmChatSendGate;
 import org.signal.core.util.ParcelUtil;
 import org.thoughtcrime.securesms.util.SignalLocalMetrics;
 import org.whispersystems.signalservice.api.push.DistributionId;
@@ -219,6 +220,10 @@ public class MessageSender {
                           @Nullable final MessageTable.InsertListener insertListener)
   {
     Log.i(TAG, "Sending media message to " + message.getThreadRecipient().getId() + ", thread: " + threadId);
+    if (!TkmChatSendGate.allowBeforeSend(context, message.getThreadRecipient())) {
+      return threadId;
+    }
+
     try {
       ThreadTable  threadTable = SignalDatabase.threads();
       MessageTable database    = SignalDatabase.messages();
@@ -257,6 +262,10 @@ public class MessageSender {
                               @Nullable final String metricId,
                               @Nullable final MessageTable.InsertListener insertListener)
   {
+    if (!TkmChatSendGate.allowBeforeSend(context, message.getThreadRecipient())) {
+      return threadId;
+    }
+
     try {
       Recipient    recipient         = message.getThreadRecipient();
       long         allocatedThreadId = SignalDatabase.threads().getOrCreateValidThreadId(recipient, threadId, message.getDistributionType());
@@ -287,6 +296,10 @@ public class MessageSender {
                                                      final MessageTable.InsertListener insertListener)  {
     Log.i(TAG, "Sending media message with pre-uploads to " + message.getThreadRecipient().getId() + ", thread: " + threadId + ", pre-uploads: " + preUploadResults);
     Preconditions.checkArgument(message.getAttachments().isEmpty(), "If the media is pre-uploaded, there should be no attachments on the message.");
+
+    if (!TkmChatSendGate.allowBeforeSend(context, message.getThreadRecipient())) {
+      return false;
+    }
 
     try {
       ThreadTable     threadTable        = SignalDatabase.threads();
