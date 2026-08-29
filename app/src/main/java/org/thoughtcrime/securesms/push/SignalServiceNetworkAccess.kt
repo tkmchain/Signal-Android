@@ -168,7 +168,8 @@ class SignalServiceNetworkAccess(context: Context) {
     }
   }
 
-  private val serviceTrustStore: TrustStore? = if (BuildConfig.BUILD_DISTRIBUTION_TYPE == "github") null else SignalServiceTrustStore(context)
+  private val serviceTrustStore: TrustStore = SignalServiceTrustStore(context)
+  private val signalServiceTrustStore: TrustStore? = if (BuildConfig.BUILD_DISTRIBUTION_TYPE == "github") null else serviceTrustStore
   private val gTrustStore: TrustStore = DomainFrontingTrustStore(context)
   private val fTrustStore: TrustStore = DomainFrontingDigicertTrustStore(context)
 
@@ -269,7 +270,7 @@ class SignalServiceNetworkAccess(context: Context) {
   )
 
   val uncensoredConfiguration: SignalServiceConfiguration = SignalServiceConfiguration(
-    signalServiceUrls = arrayOf(SignalServiceUrl(BuildConfig.SIGNAL_URL, serviceTrustStore)),
+    signalServiceUrls = arrayOf(SignalServiceUrl(BuildConfig.SIGNAL_URL, signalServiceTrustStore)),
     signalCdnUrlMap = mapOf(
       0 to arrayOf(SignalCdnUrl(BuildConfig.SIGNAL_CDN_URL, serviceTrustStore)),
       2 to arrayOf(SignalCdnUrl(BuildConfig.SIGNAL_CDN2_URL, serviceTrustStore)),
