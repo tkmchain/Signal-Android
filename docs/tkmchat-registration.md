@@ -199,6 +199,8 @@ TKMChat Android enforces the network policy before inserting a message into the 
 
 The Android app does not upload plaintext message bodies to the TKMChat service. The `/v1/tkmchat/messages` endpoint is only for encrypted payloads or transaction-backed message records.
 
+TKMChat profile metadata is persisted by the registration service account database. Public account records include `firstName`, `about`, `avatarHash`, `avatarUrl`, `badges`, `shield2PaymentCode`, and `personalChatPriceWei`. Avatar bytes are stored as content-addressed media records and served through `GET /v1/tkmchat/account/{mailbox}/avatar`; supported formats are PNG, JPEG, and WebP.
+
 ### TKM Phone RPC integration
 
 Android includes a minimal `TkmPhoneRpcClient` for the daemon phone system at `https://wallet.tkmchain.site/rpc`. The wrapper exposes:
@@ -232,6 +234,8 @@ Android includes a minimal `TkmPhoneRpcClient` for the daemon phone system at `h
 The Android client must pass already-local owner/device signatures. It must not send wallet passphrases to RPC. Profile metadata saved locally includes the registered TKM mailbox username, first name, selected TKM phone number, phone device id, shield2 payment code, and personal-chat price.
 
 Outgoing live calls are gated through the same TKM peer/account policy before RingRTC starts. A TKM email account can place calls only when the node reports connected peers and the recipient resolves to a TKMChat identity. Call offers, answers, hangups, and ICE candidates should be encrypted locally, signed locally, and stored/propagated through the `tkmphone` call RPCs above.
+
+Messaging should follow the same pattern as EmailVM: the persistent network record contains sender, recipient, nonce, ciphertext, body hash/transaction hash when available, block/index when available, and timestamp. Plaintext and private keys are never stored by the daemon or the registration service. Android keeps local plaintext only in the normal encrypted app database.
 
 ## GTKm RPC dependency
 

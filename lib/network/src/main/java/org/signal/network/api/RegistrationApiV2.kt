@@ -634,7 +634,7 @@ class RegistrationApiV2(
     )
   }
 
-  suspend fun updateTkmChatAccount(mailbox: String, shield2PaymentCode: String?, personalChatPriceWei: String, accountUpdateToken: String): RequestResult<TkmChatAccount, TkmChatServiceError> {
+  suspend fun updateTkmChatAccount(mailbox: String, shield2PaymentCode: String?, personalChatPriceWei: String, accountUpdateToken: String, firstName: String? = null, about: String? = null, badges: List<TkmChatBadge> = emptyList(), profileImageBase64: String? = null, profileImageMime: String? = null): RequestResult<TkmChatAccount, TkmChatServiceError> {
     val encoded = URLEncoder.encode(mailbox, Charsets.UTF_8.name())
     val result = restClient.request(
       RequestSpec(
@@ -642,7 +642,7 @@ class RegistrationApiV2(
         host = RequestSpec.Host.Service,
         path = "/v1/tkmchat/account/$encoded",
         auth = RequestSpec.Auth.Header("Authorization", "Bearer $accountUpdateToken"),
-        body = UpdateTkmChatAccountRequestBody(shield2PaymentCode, personalChatPriceWei).toJsonRequestBodyOmittingNulls()
+        body = UpdateTkmChatAccountRequestBody(shield2PaymentCode, personalChatPriceWei, firstName, about, badges, profileImageBase64, profileImageMime).toJsonRequestBodyOmittingNulls()
       )
     )
 
@@ -917,10 +917,22 @@ class RegistrationApiV2(
     val aci: String,
     val mailbox: String,
     val username: String? = null,
+    val firstName: String? = null,
+    val about: String? = null,
+    val avatarHash: String? = null,
+    val avatarUrl: String? = null,
+    val badges: List<TkmChatBadge> = emptyList(),
     val shield2PaymentCode: String? = null,
     val personalChatPriceWei: String = "0",
     val createdAt: Long,
     val updatedAt: Long
+  )
+
+  @Serializable
+  data class TkmChatBadge(
+    val id: String,
+    val label: String,
+    val imageHash: String? = null
   )
 
   @Serializable
@@ -1190,7 +1202,12 @@ class RegistrationApiV2(
   @Serializable
   private class UpdateTkmChatAccountRequestBody(
     val tkmShield2PaymentCode: String?,
-    val tkmPersonalChatPriceWei: String
+    val tkmPersonalChatPriceWei: String,
+    val tkmFirstName: String?,
+    val tkmAbout: String?,
+    val tkmBadges: List<TkmChatBadge>,
+    val tkmProfileImageBase64: String?,
+    val tkmProfileImageMime: String?
   )
 
   @Serializable
