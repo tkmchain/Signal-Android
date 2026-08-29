@@ -77,7 +77,8 @@ Success:
 {
   "tkmMailbox":"info@tkm",
   "tkmClientNonce":"64-lowercase-hex-characters",
-  "tkmRegistrationToken":"opaque-single-use-token"
+  "tkmRegistrationToken":"opaque-single-use-token",
+  "tkmShield2PaymentCode":"optional-tkmshield2-payment-code"
 }
 ```
 
@@ -94,6 +95,46 @@ Success:
 - Require TLS, reject redirects to untrusted origins, and never expose registration tokens in logs or URLs.
 - Keep EmailVM private keys and all TKMChat ACI private keys client-side.
 - Enforce a unique database constraint on canonical mailbox and its on-chain registry hash.
+
+### Account lookup and TKM network metadata
+
+The service stores registration state in a backend database under `TKMCHAT_REG_DATA_DIR`. The current reference service uses an atomic JSON database so it does not need native SQLite modules on small VPS hosts.
+
+`GET /v1/tkmchat/account/{mailbox}` returns the public TKMChat account binding:
+
+```json
+{
+  "aci": "uuid",
+  "mailbox": "info@tkm",
+  "shield2PaymentCode": "tkmshield2...",
+  "createdAt": 1787821200,
+  "updatedAt": 1787821200
+}
+```
+
+`PUT /v1/tkmchat/account/{mailbox}` can update the public shield2 payment code metadata:
+
+```json
+{"tkmShield2PaymentCode":"tkmshield2..."}
+```
+
+`GET /v1/tkmchat/peers` returns the chain ID, public RPC/prover URLs, configured known GTKm peers, and best-effort local peer count:
+
+```json
+{
+  "chainId": 8979,
+  "rpcUrl": "https://wallet.tkmchain.site/rpc",
+  "proverUrl": "https://wallet.tkmchain.site/prover",
+  "peers": [],
+  "peerCount": "0x3"
+}
+```
+
+Set `TKMCHAT_KNOWN_PEERS` to a comma-separated list of enodes or peer URLs when deploying.
+
+### Shield2 payment-before-chat
+
+Each user should publish their own shield2 payment code before payment-gated chat is enforced. The registration service now stores and serves the `tkmShield2PaymentCode` field, but the Android app must use a real shield2 wallet/key module to generate it locally. The backend must not invent shield2 addresses, because that would create server-owned spend keys.
 
 ## GTKm RPC dependency
 

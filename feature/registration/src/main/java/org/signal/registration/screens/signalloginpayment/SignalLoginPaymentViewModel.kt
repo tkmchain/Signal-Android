@@ -20,10 +20,9 @@ import org.signal.network.api.RegistrationApiV2.RegisterAccountWithoutPhoneNumbe
 import org.signal.network.api.RegistrationApiV2.TkmMailboxVerificationError
 import org.signal.registration.RegistrationFlowEvent
 import org.signal.registration.RegistrationRepository
-import org.signal.registration.RegistrationRoute
+import org.signal.registration.RestoreDecision
 import org.signal.registration.TkmMailbox
 import org.signal.registration.screens.util.navigateBack
-import org.signal.registration.screens.util.navigateTo
 import java.security.SecureRandom
 
 class SignalLoginPaymentViewModel(
@@ -113,7 +112,9 @@ class SignalLoginPaymentViewModel(
       is RequestResult.Success -> {
         val (response, keyMaterial) = result.result
         parentEventEmitter(RegistrationFlowEvent.Registered(keyMaterial.accountEntropyPool, response.storageCapable))
-        parentEventEmitter.navigateTo(if (response.storageCapable) RegistrationRoute.PinEntryForSvrRestore else RegistrationRoute.PinCreate)
+        repository.setPinOptedOut()
+        repository.setRestoreDecision(RestoreDecision.NEW_ACCOUNT)
+        parentEventEmitter(RegistrationFlowEvent.RegistrationComplete)
       }
       is RequestResult.NonSuccess -> {
         val error = when (result.error) {
