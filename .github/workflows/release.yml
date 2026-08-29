@@ -105,16 +105,18 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release
-          printf '%s' "$RELEASE_KEYSTORE" | base64 --decode > "$RUNNER_TEMP/tkmchat-release.jks"
+          printf '%s' "$RELEASE_KEYSTORE" | base64 --decode > "$RUNNER_TEMP/tkmchat-release.p12"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
           mapfile -t release_apks < <(find app/build/outputs/apk -type f -name '*.apk' | sort)
           test "${#release_apks[@]}" -gt 0
           for apk in "${release_apks[@]}"; do
             name="$(basename "$apk" .apk)"
-            output="release/${name}-signed.apk"
+            clean_name="${name/-unsigned/}"
+            output="release/${clean_name}-signed.apk"
             "$APKSIGNER" sign \
-              --ks "$RUNNER_TEMP/tkmchat-release.jks" \
+              --ks "$RUNNER_TEMP/tkmchat-release.p12" \
+              --ks-type PKCS12 \
               --ks-pass "env:RELEASE_STORE_PASSWORD" \
               --ks-key-alias "$RELEASE_KEY_ALIAS" \
               --key-pass "env:RELEASE_KEY_PASSWORD" \
