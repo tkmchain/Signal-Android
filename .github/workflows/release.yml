@@ -108,7 +108,9 @@ jobs:
           printf '%s' "$RELEASE_KEYSTORE" | base64 --decode > "$RUNNER_TEMP/tkmchat-release.jks"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
-          while IFS= read -r apk; do
+          mapfile -t release_apks < <(find app/build/outputs/apk -type f -name '*.apk' | sort)
+          test "${#release_apks[@]}" -gt 0
+          for apk in "${release_apks[@]}"; do
             name="$(basename "$apk" .apk)"
             output="release/${name}-signed.apk"
             "$APKSIGNER" sign \
@@ -119,8 +121,7 @@ jobs:
               --out "$output" \
               "$apk"
             "$APKSIGNER" verify --verbose --print-certs "$output"
-          done < <(find app/build/outputs/apk/github/prod/release -type f -name '*.apk' | sort)
-          test -n "$(find release -type f -name '*.apk' -print -quit)"
+          done
           sha256sum release/*.apk > release/SHA256SUMS
 
       - name: Publish GitHub release
