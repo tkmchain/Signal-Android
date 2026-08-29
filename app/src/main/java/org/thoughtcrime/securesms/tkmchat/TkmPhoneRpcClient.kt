@@ -46,12 +46,12 @@ object TkmPhoneRpcClient {
     return call(rpcUrl, "tkmphone_deviceKeySigningHash", number, device, publicKey)
   }
 
-  suspend fun sendMessageSigningHash(fromNumber: String, toNumber: String, ciphertextHex: String, nonceHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
-    return call(rpcUrl, "tkmphone_sendMessageSigningHash", fromNumber, toNumber, ciphertextHex, nonceHex)
+  suspend fun sendMessageSigningHash(fromNumber: String, toNumber: String, nonceHex: String, ciphertextHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_sendMessageSigningHash", fromNumber, toNumber, nonceHex, ciphertextHex)
   }
 
-  suspend fun encryptPayload(fromNumber: String, toNumber: String, payloadHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
-    return call(rpcUrl, "tkmphone_encryptPayload", fromNumber, toNumber, payloadHex)
+  suspend fun encryptPayload(fromNumber: String, toNumber: String, nonceHex: String, payloadHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_encryptPayload", fromNumber, toNumber, nonceHex, payloadHex)
   }
 
   suspend fun encryptPayloadForDevices(fromNumber: String, toNumber: String, payloadHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
@@ -64,6 +64,71 @@ object TkmPhoneRpcClient {
 
   suspend fun messagesForNumber(number: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
     return call(rpcUrl, "tkmphone_messagesForNumber", number)
+  }
+
+  suspend fun webRTCConfig(rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_webRTCConfig")
+  }
+
+  suspend fun startCallSigningHash(fromNumber: String, toNumber: String, offerNonceHex: String, offerCiphertextHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_startCallSigningHash", fromNumber, toNumber, offerNonceHex, offerCiphertextHex)
+  }
+
+  suspend fun startCall(fromNumber: String, toNumber: String, offerCiphertextHex: String, offerNonceHex: String, signatureHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_startCall", fromNumber, toNumber, offerCiphertextHex, offerNonceHex, signatureHex)
+  }
+
+  suspend fun startCallWithExpiry(fromNumber: String, toNumber: String, offerCiphertextHex: String, offerNonceHex: String, expiresAt: Long, signatureHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_startCallWithExpiry", fromNumber, toNumber, offerCiphertextHex, offerNonceHex, expiresAt, signatureHex)
+  }
+
+  suspend fun acceptCallSigningHash(callId: Long, answerNonceHex: String, answerCiphertextHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_acceptCallSigningHash", quantity(callId), answerNonceHex, answerCiphertextHex)
+  }
+
+  suspend fun acceptCall(callId: Long, answerCiphertextHex: String, answerNonceHex: String, signatureHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_acceptCall", quantity(callId), answerCiphertextHex, answerNonceHex, signatureHex)
+  }
+
+  suspend fun rejectCallSigningHash(callId: Long, number: String, reason: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_rejectCallSigningHash", quantity(callId), number, reason)
+  }
+
+  suspend fun rejectCall(callId: Long, number: String, reason: String, signatureHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_rejectCall", quantity(callId), number, reason, signatureHex)
+  }
+
+  suspend fun endCallSigningHash(callId: Long, number: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_endCallSigningHash", quantity(callId), number)
+  }
+
+  suspend fun endCall(callId: Long, number: String, signatureHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_endCall", quantity(callId), number, signatureHex)
+  }
+
+  suspend fun callCandidateHash(callId: Long, number: String, nonceHex: String, ciphertextHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_callCandidateHash", quantity(callId), number, nonceHex, ciphertextHex)
+  }
+
+  suspend fun callCandidateSigningHash(callId: Long, number: String, nonceHex: String, ciphertextHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_callCandidateSigningHash", quantity(callId), number, nonceHex, ciphertextHex)
+  }
+
+  suspend fun addCallCandidate(callId: Long, number: String, ciphertextHex: String, nonceHex: String, signatureHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_addCallCandidate", quantity(callId), number, ciphertextHex, nonceHex, signatureHex)
+  }
+
+  suspend fun callCandidateListSigningHash(callId: Long, number: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_callCandidateListSigningHash", quantity(callId), number)
+  }
+
+  suspend fun callCandidates(callId: Long, number: String, signatureHex: String, rpcUrl: String = DEFAULT_RPC_URL): JSONObject {
+    return call(rpcUrl, "tkmphone_callCandidates", quantity(callId), number, signatureHex)
+  }
+
+  private fun quantity(value: Long): String {
+    require(value >= 0) { "quantity cannot be negative" }
+    return "0x${value.toString(16)}"
   }
 
   private suspend fun call(rpcUrl: String, method: String, vararg params: Any): JSONObject {

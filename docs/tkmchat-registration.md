@@ -213,8 +213,25 @@ Android includes a minimal `TkmPhoneRpcClient` for the daemon phone system at `h
 - `tkmphone_encryptPayloadForDevices`
 - `tkmphone_sendEncryptedMessage`
 - `tkmphone_messagesForNumber`
+- `tkmphone_webRTCConfig`
+- `tkmphone_startCallSigningHash`
+- `tkmphone_startCall`
+- `tkmphone_startCallWithExpiry`
+- `tkmphone_acceptCallSigningHash`
+- `tkmphone_acceptCall`
+- `tkmphone_rejectCallSigningHash`
+- `tkmphone_rejectCall`
+- `tkmphone_endCallSigningHash`
+- `tkmphone_endCall`
+- `tkmphone_callCandidateHash`
+- `tkmphone_callCandidateSigningHash`
+- `tkmphone_addCallCandidate`
+- `tkmphone_callCandidateListSigningHash`
+- `tkmphone_callCandidates`
 
 The Android client must pass already-local owner/device signatures. It must not send wallet passphrases to RPC. Profile metadata saved locally includes the registered TKM mailbox username, first name, selected TKM phone number, phone device id, shield2 payment code, and personal-chat price.
+
+Outgoing live calls are gated through the same TKM peer/account policy before RingRTC starts. A TKM email account can place calls only when the node reports connected peers and the recipient resolves to a TKMChat identity. Call offers, answers, hangups, and ICE candidates should be encrypted locally, signed locally, and stored/propagated through the `tkmphone` call RPCs above.
 
 ## GTKm RPC dependency
 

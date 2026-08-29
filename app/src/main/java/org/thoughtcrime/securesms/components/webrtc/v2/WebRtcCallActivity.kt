@@ -82,6 +82,7 @@ import org.thoughtcrime.securesms.safety.SafetyNumberBottomSheet
 import org.thoughtcrime.securesms.service.webrtc.CallLinkDisconnectReason
 import org.thoughtcrime.securesms.service.webrtc.SignalCallManager
 import org.thoughtcrime.securesms.sms.MessageSender
+import org.thoughtcrime.securesms.tkmchat.TkmChatSendGate
 import org.thoughtcrime.securesms.util.FullscreenHelper
 import org.thoughtcrime.securesms.util.RemoteConfig
 import org.thoughtcrime.securesms.util.TextSecurePreferences
@@ -1211,6 +1212,11 @@ class WebRtcCallActivity : BaseActivity(), SafetyNumberChangeDialog.Callback, Re
 
   private fun startCall(isVideoCall: Boolean) {
     enableVideoIfAvailable = isVideoCall
+
+    if (!TkmChatSendGate.allowBeforeCall(this, viewModel.recipient.get())) {
+      delayedFinish()
+      return
+    }
 
     if (isVideoCall) {
       AppDependencies.signalCallManager.startOutgoingVideoCall(viewModel.recipient.get())

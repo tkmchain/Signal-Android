@@ -34,6 +34,16 @@ object TkmChatSendGate {
   @JvmStatic
   @WorkerThread
   fun allowBeforeSend(context: Context, recipient: Recipient): Boolean {
+    return allowBeforeNetworkAction(context, recipient, "TKMChat send")
+  }
+
+  @JvmStatic
+  @WorkerThread
+  fun allowBeforeCall(context: Context, recipient: Recipient): Boolean {
+    return allowBeforeNetworkAction(context, recipient, "TKMChat call")
+  }
+
+  private fun allowBeforeNetworkAction(context: Context, recipient: Recipient, action: String): Boolean {
     val selfMailbox = SignalStore.account.tkmMailbox?.trim()?.lowercase(Locale.US)
 
     if (selfMailbox.isNullOrBlank()) {
@@ -47,8 +57,8 @@ object TkmChatSendGate {
     } catch (e: TkmChatSendBlockedException) {
       SendGateResult.Blocked(e.message ?: "TKMChat send blocked.")
     } catch (e: Exception) {
-      Log.w(TAG, "TKMChat send policy check failed.", e)
-      SendGateResult.Blocked("TKMChat network check failed. Try again when your node is reachable.")
+      Log.w(TAG, "$action policy check failed.", e)
+      SendGateResult.Blocked("$action network check failed. Try again when your node is reachable.")
     }
 
     return when (result) {
