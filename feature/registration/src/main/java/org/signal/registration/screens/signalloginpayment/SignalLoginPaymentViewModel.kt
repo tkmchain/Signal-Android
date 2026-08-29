@@ -78,7 +78,7 @@ class SignalLoginPaymentViewModel(
         phase = SignalLoginPaymentState.Phase.Code,
         showSpinner = false
       )
-      is RequestResult.NonSuccess -> _state.value = _state.value.copy(showSpinner = false, inlineError = result.error.toScreenError())
+      is RequestResult.NonSuccess -> handleTkmMailboxVerificationError(result.error)
       is RequestResult.RetryableNetworkError -> _state.value = _state.value.copy(showSpinner = false, dialogs = _state.value.dialogs.copy(networkError = true))
       is RequestResult.ApplicationError -> {
         Log.w(TAG, "Unable to create TKM mailbox verification session", result.cause)
@@ -99,7 +99,7 @@ class SignalLoginPaymentViewModel(
         }
         registerAccount(token)
       }
-      is RequestResult.NonSuccess -> _state.value = _state.value.copy(showSpinner = false, inlineError = verification.error.toScreenError())
+      is RequestResult.NonSuccess -> handleTkmMailboxVerificationError(verification.error)
       is RequestResult.RetryableNetworkError -> _state.value = _state.value.copy(showSpinner = false, dialogs = _state.value.dialogs.copy(networkError = true))
       is RequestResult.ApplicationError -> {
         Log.w(TAG, "Unable to verify TKM mailbox", verification.cause)
@@ -136,6 +136,15 @@ class SignalLoginPaymentViewModel(
     TkmMailboxVerificationError.MailboxOrSessionNotFound -> SignalLoginPaymentState.Error.MailboxNotFound
     TkmMailboxVerificationError.MailboxAlreadyRegistered -> SignalLoginPaymentState.Error.MailboxAlreadyRegistered
     is TkmMailboxVerificationError.RateLimited -> SignalLoginPaymentState.Error.RateLimited
+    TkmMailboxVerificationError.ServiceUnavailable -> SignalLoginPaymentState.Error.ServiceUnavailable
+  }
+
+  private fun handleTkmMailboxVerificationError(error: TkmMailboxVerificationError) {
+    if (error == TkmMailboxVerificationError.ServiceUnavailable) {
+      _state.value = _state.value.copy(showSpinner = false, dialogs = _state.value.dialogs.copy(networkError = true))
+    } else {
+      _state.value = _state.value.copy(showSpinner = false, inlineError = error.toScreenError())
+    }
   }
 
   private fun generateClientNonce(): String {

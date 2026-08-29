@@ -16,7 +16,7 @@ See [docs/tkmchat-registration.md](docs/tkmchat-registration.md) for the server 
 
 ## Important deployment requirement
 
-This repository is the Android client. A compatible TKMChat messaging service must implement the mailbox verification and numberless registration endpoints before the APK can register or exchange messages. GTKm already supplies the canonical EmailVM mailbox registry through `tkmdomain_mailbox`; OTP state, registration tokens, and private keys must not be placed in GTKm RPC.
+This repository is the Android client. A compatible TKMChat messaging service must implement the mailbox verification and numberless registration endpoints before the APK can register or exchange messages. GTKm supplies the canonical EmailVM mailbox registry through `tkmdomain_mailbox` and delivers verification codes through `emailvm_deliverOTP`; OTP session hashes, registration tokens, account bindings, and private keys must remain outside consensus.
 
 ## Upstream and license
 

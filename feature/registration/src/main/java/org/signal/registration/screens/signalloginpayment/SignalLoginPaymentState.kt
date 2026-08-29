@@ -36,7 +36,8 @@ data class SignalLoginPaymentState(
     MailboxAlreadyRegistered,
     IncorrectCode,
     RegistrationRejected,
-    RateLimited
+    RateLimited,
+    ServiceUnavailable
   }
 
   data class Dialogs(

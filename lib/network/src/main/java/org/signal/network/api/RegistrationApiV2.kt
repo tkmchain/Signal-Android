@@ -608,6 +608,7 @@ class RegistrationApiV2(
       404 -> TkmMailboxVerificationError.MailboxOrSessionNotFound
       409 -> TkmMailboxVerificationError.MailboxAlreadyRegistered
       429 -> TkmMailboxVerificationError.RateLimited(error.retryAfter())
+      500, 502, 503, 504 -> TkmMailboxVerificationError.ServiceUnavailable
       else -> null
     }
   }
@@ -1168,6 +1169,7 @@ class RegistrationApiV2(
     data object MailboxOrSessionNotFound : TkmMailboxVerificationError()
     data object MailboxAlreadyRegistered : TkmMailboxVerificationError()
     data class RateLimited(val retryAfter: Duration) : TkmMailboxVerificationError()
+    data object ServiceUnavailable : TkmMailboxVerificationError()
   }
 
   sealed class CreateLoginReceiptCredentialError : BadRequestError {

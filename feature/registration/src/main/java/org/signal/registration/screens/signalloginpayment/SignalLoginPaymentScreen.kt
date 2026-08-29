@@ -169,6 +169,7 @@ private fun InlineError(error: SignalLoginPaymentState.Error?) {
     SignalLoginPaymentState.Error.IncorrectCode -> R.string.TkmMailboxRegistration__incorrect_code
     SignalLoginPaymentState.Error.RegistrationRejected -> R.string.TkmMailboxRegistration__registration_rejected
     SignalLoginPaymentState.Error.RateLimited -> R.string.TkmMailboxRegistration__rate_limited
+    SignalLoginPaymentState.Error.ServiceUnavailable -> R.string.TkmMailboxRegistration__network_error
     null -> return
   }
   Text(stringResource(message))

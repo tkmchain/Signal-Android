@@ -7,7 +7,7 @@ TKMChat uses an existing TKMChain EmailVM mailbox as the human-readable account 
 1. The user purchases and configures an EmailVM mailbox through the TKMChain domain system, including an encryption key.
 2. In TKMChat, the user enters the canonical mailbox, for example `info@tkm`.
 3. The TKMChat service resolves the mailbox from a chain-ID `8979` node using `tkmdomain_mailbox` and rejects missing, malformed, or unkeyed mailboxes.
-4. The service generates a cryptographically random one-time code and delivers it as an encrypted EmailVM message. The RPC response and application logs must never contain the code.
+4. The service generates a cryptographically random one-time code and asks GTKm to deliver it into the target EmailVM mailbox through `emailvm_deliverOTP`. The REST response and application logs must never contain the code.
 5. The user enters the code in TKMChat. The service returns a short-lived, single-use registration token.
 6. The app locally creates its ACI identity key, signed prekey, Kyber last-resort prekey, account entropy pool, profile key, and service password.
 7. The app submits the token, canonical mailbox, and public registration material. The service atomically consumes the token and permanently binds the mailbox to the new ACI.
@@ -86,6 +86,7 @@ Success:
 ## Required security controls
 
 - Generate codes with a CSPRNG; store only a keyed hash of each code.
+- Deliver codes through GTKm RPC `emailvm_deliverOTP`; the daemon must already expose the `emailvm` RPC namespace and be upgraded to a release that includes this method.
 - Expire sessions and tokens quickly, make tokens single-use, and rotate them after every successful check.
 - Bind the token to the canonical mailbox, client nonce, and hash of submitted ACI public registration material.
 - Rate-limit by mailbox, source network, device attestation signal, and session.
@@ -94,6 +95,6 @@ Success:
 - Keep EmailVM private keys and all TKMChat ACI private keys client-side.
 - Enforce a unique database constraint on canonical mailbox and its on-chain registry hash.
 
-## Why GTKm needs no new RPC
+## GTKm RPC dependency
 
-Mailbox existence, owner, registry hash, and encryption-key publication are durable chain facts and are already queryable. OTPs and bearer tokens are temporary authentication state belonging to the messaging service. Putting them in GTKm would expand the node attack surface, leak sensitive metadata, and incorrectly turn authentication into consensus state.
+Mailbox existence, owner, registry hash, and encryption-key publication are durable chain facts and are queryable through GTKm. The registration bridge also depends on `emailvm_deliverOTP` so the daemon performs the actual mailbox delivery. OTP sessions, hashes, registration tokens, and TKMChat account bindings still belong to the TKMChat service and must not become consensus state.
