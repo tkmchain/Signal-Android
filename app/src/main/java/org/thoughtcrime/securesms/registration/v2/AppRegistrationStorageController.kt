@@ -808,6 +808,7 @@ class AppRegistrationStorageController(private val context: Context) : StorageCo
     }
     accountData.tkmMailbox?.nullIfBlank()?.let {
       SignalStore.account.tkmMailbox = it
+      SignalStore.account.tkmUsername = it.substringBefore("@").nullIfBlank()
     }
 
     val now = System.currentTimeMillis()

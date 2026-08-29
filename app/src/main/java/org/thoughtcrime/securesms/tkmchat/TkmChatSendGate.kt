@@ -86,7 +86,7 @@ object TkmChatSendGate {
 
     val price = account.personalChatPriceWei.toBigIntegerOrNull() ?: ZERO
     if (price > ZERO) {
-      throw TkmChatSendBlockedException("This user charges ${account.personalChatPriceWei} wei before personal chat. Pay their shield2 address before sending.")
+      throw TkmChatSendBlockedException("This user charges ${formatTkm(price)} TKM before personal chat. Pay their shield2 address before sending.")
     }
 
     AppDependencies.registrationApiV2.createTkmChat(
@@ -135,6 +135,13 @@ object TkmChatSendGate {
     Handler(Looper.getMainLooper()).post {
       Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
     }
+  }
+
+  private fun formatTkm(wei: BigInteger): String {
+    val base = BigInteger.TEN.pow(18)
+    val whole = wei.divide(base)
+    val fraction = wei.mod(base).toString().padStart(18, '0').trimEnd('0')
+    return if (fraction.isBlank()) whole.toString() else "$whole.$fraction"
   }
 
   private fun <T> RequestResult<T, *>.successOrBlock(fallback: String): T {

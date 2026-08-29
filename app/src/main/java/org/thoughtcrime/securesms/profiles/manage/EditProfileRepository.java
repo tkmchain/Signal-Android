@@ -29,6 +29,7 @@ final class EditProfileRepository {
       try {
         ProfileUtil.uploadProfileWithName(context, profileName);
         SignalDatabase.recipients().setProfileName(Recipient.self().getId(), profileName);
+        SignalStore.account().setTkmFirstName(profileName.getGivenName());
         AppDependencies.getJobManager().add(new MultiDeviceProfileContentUpdateJob());
 
         callback.accept(Result.SUCCESS);

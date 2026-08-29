@@ -51,6 +51,10 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
     private const val KEY_PNI_REGISTRATION_ID = "account.pni_registration_id"
     private const val KEY_AUTH_CREDENTIAL_SALT = "account.auth_credential_salt"
     private const val KEY_TKM_MAILBOX = "account.tkm_mailbox"
+    private const val KEY_TKM_USERNAME = "account.tkm_username"
+    private const val KEY_TKM_FIRST_NAME = "account.tkm_first_name"
+    private const val KEY_TKM_PHONE_NUMBER = "account.tkm_phone_number"
+    private const val KEY_TKM_PHONE_DEVICE_ID = "account.tkm_phone_device_id"
     private const val KEY_TKM_SHIELD2_PAYMENT_CODE = "account.tkm_shield2_payment_code"
     private const val KEY_TKM_PERSONAL_CHAT_PRICE_WEI = "account.tkm_personal_chat_price_wei"
     private const val KEY_TKM_ACCOUNT_UPDATE_TOKEN = "account.tkm_account_update_token"
@@ -135,6 +139,12 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
       KEY_USERNAME_LINK_ENTROPY,
       KEY_USERNAME_LINK_SERVER_ID,
       KEY_TKM_MAILBOX,
+      KEY_TKM_USERNAME,
+      KEY_TKM_FIRST_NAME,
+      KEY_TKM_PHONE_NUMBER,
+      KEY_TKM_PHONE_DEVICE_ID,
+      KEY_TKM_SHIELD2_PAYMENT_CODE,
+      KEY_TKM_PERSONAL_CHAT_PRICE_WEI,
       KEY_ACCOUNT_ENTROPY_POOL
     )
   }
@@ -258,7 +268,33 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
   /** Canonical EmailVM identity bound to this TKMChat ACI. */
   var tkmMailbox: String?
     get() = getString(KEY_TKM_MAILBOX, null).nullIfBlank()
-    set(value) = putString(KEY_TKM_MAILBOX, value.nullIfBlank())
+    set(value) {
+      val mailbox = value.nullIfBlank()
+      putString(KEY_TKM_MAILBOX, mailbox)
+      if (!mailbox.isNullOrBlank()) {
+        putString(KEY_TKM_USERNAME, mailbox.substringBefore("@").nullIfBlank())
+      }
+    }
+
+  /** TKM username derived from the registered mailbox, e.g. `info` from `info@tkm`. */
+  var tkmUsername: String?
+    get() = getString(KEY_TKM_USERNAME, null).nullIfBlank()
+    set(value) = putString(KEY_TKM_USERNAME, value.nullIfBlank())
+
+  /** Local first name shown in the TKMChat profile layer. */
+  var tkmFirstName: String?
+    get() = getString(KEY_TKM_FIRST_NAME, null).nullIfBlank()
+    set(value) = putString(KEY_TKM_FIRST_NAME, value.nullIfBlank())
+
+  /** Owned TKM Phone number selected for network-native encrypted chat/call signaling. */
+  var tkmPhoneNumber: String?
+    get() = getString(KEY_TKM_PHONE_NUMBER, null).nullIfBlank()
+    set(value) = putString(KEY_TKM_PHONE_NUMBER, value.nullIfBlank())
+
+  /** Local device id registered against [tkmPhoneNumber] through `tkmphone_registerDeviceKey`. */
+  var tkmPhoneDeviceId: String?
+    get() = getString(KEY_TKM_PHONE_DEVICE_ID, null).nullIfBlank()
+    set(value) = putString(KEY_TKM_PHONE_DEVICE_ID, value.nullIfBlank())
 
   /** Public shield2 payment code other users must pay before opening a personal chat. */
   var tkmShield2PaymentCode: String?

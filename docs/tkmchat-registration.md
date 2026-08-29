@@ -199,6 +199,23 @@ TKMChat Android enforces the network policy before inserting a message into the 
 
 The Android app does not upload plaintext message bodies to the TKMChat service. The `/v1/tkmchat/messages` endpoint is only for encrypted payloads or transaction-backed message records.
 
+### TKM Phone RPC integration
+
+Android includes a minimal `TkmPhoneRpcClient` for the daemon phone system at `https://wallet.tkmchain.site/rpc`. The wrapper exposes:
+
+- `tkmphone_status`
+- `tkmphone_registeredNumber`
+- `tkmphone_registeredNumbers`
+- `tkmphone_deviceKeys`
+- `tkmphone_deviceKeySigningHash`
+- `tkmphone_sendMessageSigningHash`
+- `tkmphone_encryptPayload`
+- `tkmphone_encryptPayloadForDevices`
+- `tkmphone_sendEncryptedMessage`
+- `tkmphone_messagesForNumber`
+
+The Android client must pass already-local owner/device signatures. It must not send wallet passphrases to RPC. Profile metadata saved locally includes the registered TKM mailbox username, first name, selected TKM phone number, phone device id, shield2 payment code, and personal-chat price.
+
 ## GTKm RPC dependency
 
 Mailbox existence, owner, registry hash, and encryption-key publication are durable chain facts and are queryable through GTKm. The registration bridge also depends on `emailvm_deliverOTP` so the daemon performs the actual mailbox delivery. OTP sessions, hashes, registration tokens, and TKMChat account bindings still belong to the TKMChat service and must not become consensus state.

@@ -204,15 +204,15 @@
     <!-- Error displayed under the card expiry text field when the expiry year is invalid -->
     <string name="CreditCardFragment__invalid_year">Invalid year</string>
     <!-- Button label to confirm credit card input and proceed with one-time payment -->
-    <string name="CreditCardFragment__donate_s">Donate %1$s</string>
+    <string name="CreditCardFragment__donate_s">Donate %1$s TKM</string>
     <!-- Button label to confirm credit card input and proceed with subscription payment -->
-    <string name="CreditCardFragment__donate_s_month">Donate %1$s/month</string>
+    <string name="CreditCardFragment__donate_s_month">Donate %1$s TKM/month</string>
     <!-- Button label to confirm credit card input and proceed with backups payment. Placeholder is formatted price. -->
     <string name="CreditCardFragment__pay_s_month">Donate %1$s/month</string>
 
     <!-- OneTimeDonationPreference -->
     <!-- Preference title with placeholder for amount. -->
-    <string name="OneTimeDonationPreference__one_time_s">One time %1$s</string>
+    <string name="OneTimeDonationPreference__one_time_s">One time %1$s TKM</string>
     <!-- Preference subtitle when donation is pending -->
     <string name="OneTimeDonationPreference__donation_pending">Donation pending</string>
     <!-- Preference subtitle when donation is processing -->
@@ -3704,7 +3704,7 @@
     <string name="ConversationUpdateItem_view">View</string>
     <string name="ConversationUpdateItem_the_disappearing_message_time_will_be_set_to_s_when_you_message_them">The disappearing message time will be set to %1$s when you message them.</string>
     <!-- Update item button text to show to boost a feature -->
-    <string name="ConversationUpdateItem_donate">Donate</string>
+    <string name="ConversationUpdateItem_donate">Donate TKM</string>
     <!-- Update item button text to send payment -->
     <string name="ConversationUpdateItem_send_payment">Send payment</string>
     <!-- Update item button text to activate payments -->
@@ -6097,7 +6097,7 @@
     <!-- Body text for prompt to donate. Shown in a popup at the bottom of the chat list. -->
     <string name="Donate2022Q2Megaphone_signal_is_powered_by_people_like_you">TKMChat is powered by people like you. Donate monthly and receive a badge.</string>
     <!-- Button label that brings a user to the donate screen. Shown in a popup at the bottom of the chat list. -->
-    <string name="Donate2022Q2Megaphone_donate">Donate</string>
+    <string name="Donate2022Q2Megaphone_donate">Donate TKM</string>
     <!-- Button label that dismissed a prompt to donate. Shown in a popup at the bottom of the chat list. -->
     <string name="Donate2022Q2Megaphone_not_now">Not now</string>
 
@@ -6120,7 +6120,7 @@
     <!-- Displayed in the Become a Sustainer megaphone -->
     <string name="BecomeASustainerMegaphone__signal_is_powered_by">TKMChat is powered by people like you. Donate and receive a badge.</string>
     <string name="BecomeASustainerMegaphone__not_now">Not now</string>
-    <string name="BecomeASustainerMegaphone__donate">Donate</string>
+    <string name="BecomeASustainerMegaphone__donate">Donate TKM</string>
 
     <!-- KeyboardPagerFragment -->
     <string name="KeyboardPagerFragment_emoji">Emoji</string>
@@ -6424,7 +6424,7 @@
     <string name="SelectFeaturedBadgeFragment__failed_to_update_profile">Failed to update profile</string>
 
     <!-- Displayed on primary button in the bottom sheet as a call-to-action to launch into the donation flow -->
-    <string name="ViewBadgeBottomSheetDialogFragment__donate_now">Donate</string>
+    <string name="ViewBadgeBottomSheetDialogFragment__donate_now">Donate TKM</string>
     <!-- Title of a page in the bottom sheet. Placeholder is a user\'s short-name -->
     <string name="ViewBadgeBottomSheetDialogFragment__s_supports_signal">%1$s supports TKMChat</string>
     <!-- Description of a page in the bottom sheet of a monthly badge. Placeholder is a user\'s short-name -->
@@ -6456,7 +6456,7 @@
     <!-- First small text blurb on learn more sheet -->
     <string name="SubscribeLearnMoreBottomSheetDialogFragment__private_messaging">No ads, no trackers, no surveillance. Donate today to support TKMChat.</string>
     <!-- Second small text blurb on learn more sheet -->
-    <string name="SubscribeLearnMoreBottomSheetDialogFragment__donate_and_get_badge">Get an optional badge on your profile when you donate</string>
+    <string name="SubscribeLearnMoreBottomSheetDialogFragment__donate_and_get_badge">Get an optional badge on your profile when you donate TKM</string>
     <!-- Third small text blurb on learn more sheet -->
     <string name="SubscribeLearnMoreBottomSheetDialogFragment__your_privacy_is_our_mission">Your privacy is our mission</string>
     <!-- Fourth small text blurb on learn more sheet. Non-English translations should use "Signal is a nonprofit." instead, dropping the 501c3 reference. -->
@@ -6489,9 +6489,9 @@
     <!-- Label that externally links to Signal Donor FAQ page -->
     <string name="ManageDonationsFragment__subscription_faq">Donor FAQ</string>
     <!-- Preference heading for other ways to donate -->
-    <string name="ManageDonationsFragment__other_ways_to_give">Other ways to give</string>
+    <string name="ManageDonationsFragment__other_ways_to_give">Other ways to give TKM</string>
     <!-- Preference label to launch badge gifting -->
-    <string name="ManageDonationsFragment__donate_for_a_friend">Donate for a friend</string>
+    <string name="ManageDonationsFragment__donate_for_a_friend">Donate TKM for a friend</string>
     <!-- Dialog title shown when a donation requires verifying/confirmation outside of the app and the user hasn\'t done that yet -->
     <string name="ManageDonationsFragment__couldnt_confirm_donation">Couldn\'t confirm donation</string>
     <!-- Dialog message shown when a monthly donation requires verifying/confirmation outside of the app and the user hasn\'t done that yet, placeholder is money amount -->
@@ -7537,7 +7537,7 @@
     <!-- Continue button label -->
     <string name="DonateToSignalFragment__continue">Continue</string>
     <!-- Description below title -->
-    <string name="DonateToSignalFragment__private_messaging">Donate to support private messaging. Keep TKMChat independent and ad-free.</string>
+    <string name="DonateToSignalFragment__private_messaging">Donate TKM to support private messaging. Keep TKMChat independent and ad-free.</string>
     <!-- Dialog title when a user tries to donate while they already have a pending donation. -->
     <string name="DonateToSignalFragment__you_have_a_donation_pending">You have a donation pending</string>
     <!-- Dialog body when a user tries to donate while they already have a pending monthly donation. -->
