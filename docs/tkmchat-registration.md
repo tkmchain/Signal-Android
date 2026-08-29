@@ -134,7 +134,58 @@ Set `TKMCHAT_KNOWN_PEERS` to a comma-separated list of enodes or peer URLs when 
 
 ### Shield2 payment-before-chat
 
-Each user should publish their own shield2 payment code before payment-gated chat is enforced. The registration service now stores and serves the `tkmShield2PaymentCode` field, but the Android app must use a real shield2 wallet/key module to generate it locally. The backend must not invent shield2 addresses, because that would create server-owned spend keys.
+Each user should publish their own shield2 payment code before payment-gated personal chat is enforced. The registration service stores and serves `tkmShield2PaymentCode` and `personalChatPriceWei`.
+
+Personal chat policy:
+
+- one-to-one chat may require payment to the recipient before the chat is created;
+- group chat is always free;
+- if the TKM node has zero peers, chat creation and message persistence return `503`;
+- payment proof is represented by `paymentTxHash`;
+- the backend must not generate shield2 addresses for users, because that would create server-owned spend keys.
+
+Chat/message persistence endpoints:
+
+```http
+POST /v1/tkmchat/chats
+GET  /v1/tkmchat/chats/{chatId}/messages
+POST /v1/tkmchat/messages
+```
+
+Create a free group chat:
+
+```json
+{
+  "kind": "group",
+  "from": "alice@tkm",
+  "participants": ["alice@tkm", "bob@tkm", "carol@tkm"],
+  "title": "Team"
+}
+```
+
+Create a personal chat after payment:
+
+```json
+{
+  "kind": "personal",
+  "from": "alice@tkm",
+  "participants": ["alice@tkm", "bob@tkm"],
+  "paymentTxHash": "0x..."
+}
+```
+
+Persist an encrypted message:
+
+```json
+{
+  "chatId": "chat-id",
+  "from": "alice@tkm",
+  "to": "bob@tkm",
+  "ciphertext": "0x...",
+  "nonce": "0x...",
+  "txHash": "0x..."
+}
+```
 
 ## GTKm RPC dependency
 

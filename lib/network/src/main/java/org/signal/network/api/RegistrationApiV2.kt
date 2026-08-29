@@ -602,6 +602,103 @@ class RegistrationApiV2(
     )
   }
 
+  suspend fun getTkmChatPeers(): RequestResult<TkmChatPeers, TkmChatServiceError> {
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.GET,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/peers"
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmChatPeers>(it.bodyString()) },
+      mapError = ::mapTkmChatServiceError
+    )
+  }
+
+  suspend fun getTkmChatAccount(mailboxOrUsername: String): RequestResult<TkmChatAccount, TkmChatServiceError> {
+    val encoded = URLEncoder.encode(mailboxOrUsername, Charsets.UTF_8.name())
+    val path = if (mailboxOrUsername.contains("@")) "/v1/tkmchat/account/$encoded" else "/v1/tkmchat/resolve/$encoded"
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.GET,
+        host = RequestSpec.Host.Service,
+        path = path
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmChatAccount>(it.bodyString()) },
+      mapError = ::mapTkmChatServiceError
+    )
+  }
+
+  suspend fun updateTkmChatAccount(mailbox: String, shield2PaymentCode: String?, personalChatPriceWei: String): RequestResult<TkmChatAccount, TkmChatServiceError> {
+    val encoded = URLEncoder.encode(mailbox, Charsets.UTF_8.name())
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.PUT,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/account/$encoded",
+        body = UpdateTkmChatAccountRequestBody(shield2PaymentCode, personalChatPriceWei).toJsonRequestBodyOmittingNulls()
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmChatAccount>(it.bodyString()) },
+      mapError = ::mapTkmChatServiceError
+    )
+  }
+
+  suspend fun createTkmChat(kind: String, from: String, participants: List<String>, title: String? = null, paymentTxHash: String? = null): RequestResult<TkmChat, TkmChatServiceError> {
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.POST,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/chats",
+        body = CreateTkmChatRequestBody(kind, from, participants, title, paymentTxHash).toJsonRequestBodyOmittingNulls()
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmChat>(it.bodyString()) },
+      mapError = ::mapTkmChatServiceError
+    )
+  }
+
+  suspend fun saveTkmChatMessage(chatId: String, from: String, ciphertext: String, nonce: String? = null, to: String? = null, txHash: String? = null): RequestResult<TkmChatMessage, TkmChatServiceError> {
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.POST,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/messages",
+        body = SaveTkmChatMessageRequestBody(chatId, from, to, ciphertext, nonce, txHash).toJsonRequestBodyOmittingNulls()
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmChatMessage>(it.bodyString()) },
+      mapError = ::mapTkmChatServiceError
+    )
+  }
+
+  suspend fun listTkmChatMessages(chatId: String): RequestResult<TkmChatMessagesPage, TkmChatServiceError> {
+    val encoded = URLEncoder.encode(chatId, Charsets.UTF_8.name())
+    val result = restClient.request(
+      RequestSpec(
+        method = RequestSpec.Method.GET,
+        host = RequestSpec.Host.Service,
+        path = "/v1/tkmchat/chats/$encoded/messages"
+      )
+    )
+
+    return result.toTypedResult(
+      parseSuccess = { SignalJson.json.decodeFromString<TkmChatMessagesPage>(it.bodyString()) },
+      mapError = ::mapTkmChatServiceError
+    )
+  }
+
   private fun mapTkmMailboxVerificationError(error: RestStatusCodeError): TkmMailboxVerificationError? {
     return when (error.statusCode) {
       400, 422 -> TkmMailboxVerificationError.InvalidRequest(error.bodyString())
@@ -610,6 +707,18 @@ class RegistrationApiV2(
       409 -> TkmMailboxVerificationError.MailboxAlreadyRegistered
       429 -> TkmMailboxVerificationError.RateLimited(error.retryAfter())
       500, 502, 503, 504 -> TkmMailboxVerificationError.ServiceUnavailable
+      else -> null
+    }
+  }
+
+  private fun mapTkmChatServiceError(error: RestStatusCodeError): TkmChatServiceError? {
+    return when (error.statusCode) {
+      402 -> TkmChatServiceError.PaymentRequired(error.bodyString())
+      404 -> TkmChatServiceError.NotFound(error.bodyString())
+      409 -> TkmChatServiceError.Conflict(error.bodyString())
+      422 -> TkmChatServiceError.InvalidRequest(error.bodyString())
+      429 -> TkmChatServiceError.RateLimited(error.retryAfter())
+      500, 502, 503, 504 -> TkmChatServiceError.ServiceUnavailable
       else -> null
     }
   }
@@ -793,6 +902,57 @@ class RegistrationApiV2(
     }
   }
 
+  @Serializable
+  data class TkmChatPeers(
+    val chainId: Long,
+    val rpcUrl: String,
+    val proverUrl: String,
+    val peers: List<String> = emptyList(),
+    val peerCount: String? = null
+  )
+
+  @Serializable
+  data class TkmChatAccount(
+    val aci: String,
+    val mailbox: String,
+    val username: String? = null,
+    val shield2PaymentCode: String? = null,
+    val personalChatPriceWei: String = "0",
+    val createdAt: Long,
+    val updatedAt: Long
+  )
+
+  @Serializable
+  data class TkmChat(
+    val id: String,
+    val kind: String,
+    val title: String = "",
+    val participants: List<String> = emptyList(),
+    val paymentRequiredWei: String = "0",
+    val paymentTxHash: String? = null,
+    val createdAt: Long,
+    val updatedAt: Long
+  )
+
+  @Serializable
+  data class TkmChatMessage(
+    val id: String,
+    val chatId: String,
+    val from: String,
+    val to: String? = null,
+    val groupId: String? = null,
+    val ciphertext: String,
+    val nonce: String? = null,
+    val txHash: String? = null,
+    val createdAt: Long
+  )
+
+  @Serializable
+  data class TkmChatMessagesPage(
+    val chatId: String,
+    val messages: List<TkmChatMessage> = emptyList()
+  )
+
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   class AccountAttributes(
@@ -853,6 +1013,7 @@ class RegistrationApiV2(
     val entitlements: Entitlements?,
     /** Base64 salt used to generate PNI auth credentials for an account with no phone number. */
     val authCredentialSalt: String? = null,
+    val tkmAccountUpdateToken: String? = null,
     val reregistration: Boolean
   ) {
     @Serializable
@@ -1025,6 +1186,31 @@ class RegistrationApiV2(
     val clientNonce: String
   )
 
+  @Serializable
+  private class UpdateTkmChatAccountRequestBody(
+    val tkmShield2PaymentCode: String?,
+    val tkmPersonalChatPriceWei: String
+  )
+
+  @Serializable
+  private class CreateTkmChatRequestBody(
+    val kind: String,
+    val from: String,
+    val participants: List<String>,
+    val title: String?,
+    val paymentTxHash: String?
+  )
+
+  @Serializable
+  private class SaveTkmChatMessageRequestBody(
+    val chatId: String,
+    val from: String,
+    val to: String?,
+    val ciphertext: String,
+    val nonce: String?,
+    val txHash: String?
+  )
+
   /** The PNI properties are all null when registering an account that has no phone number, in which case they are omitted from the request. */
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
@@ -1172,6 +1358,15 @@ class RegistrationApiV2(
     data object MailboxAlreadyRegistered : TkmMailboxVerificationError()
     data class RateLimited(val retryAfter: Duration) : TkmMailboxVerificationError()
     data object ServiceUnavailable : TkmMailboxVerificationError()
+  }
+
+  sealed class TkmChatServiceError : BadRequestError {
+    data class InvalidRequest(val message: String) : TkmChatServiceError()
+    data class PaymentRequired(val message: String) : TkmChatServiceError()
+    data class NotFound(val message: String) : TkmChatServiceError()
+    data class Conflict(val message: String) : TkmChatServiceError()
+    data class RateLimited(val retryAfter: Duration) : TkmChatServiceError()
+    data object ServiceUnavailable : TkmChatServiceError()
   }
 
   sealed class CreateLoginReceiptCredentialError : BadRequestError {

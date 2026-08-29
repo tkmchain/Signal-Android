@@ -51,6 +51,9 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
     private const val KEY_PNI_REGISTRATION_ID = "account.pni_registration_id"
     private const val KEY_AUTH_CREDENTIAL_SALT = "account.auth_credential_salt"
     private const val KEY_TKM_MAILBOX = "account.tkm_mailbox"
+    private const val KEY_TKM_SHIELD2_PAYMENT_CODE = "account.tkm_shield2_payment_code"
+    private const val KEY_TKM_PERSONAL_CHAT_PRICE_WEI = "account.tkm_personal_chat_price_wei"
+    private const val KEY_TKM_ACCOUNT_UPDATE_TOKEN = "account.tkm_account_update_token"
 
     private const val KEY_ACI_IDENTITY_PUBLIC_KEY = "account.aci_identity_public_key"
     private const val KEY_ACI_IDENTITY_PRIVATE_KEY = "account.aci_identity_private_key"
@@ -256,6 +259,21 @@ class AccountValues internal constructor(store: KeyValueStore, context: Context)
   var tkmMailbox: String?
     get() = getString(KEY_TKM_MAILBOX, null).nullIfBlank()
     set(value) = putString(KEY_TKM_MAILBOX, value.nullIfBlank())
+
+  /** Public shield2 payment code other users must pay before opening a personal chat. */
+  var tkmShield2PaymentCode: String?
+    get() = getString(KEY_TKM_SHIELD2_PAYMENT_CODE, null).nullIfBlank()
+    set(value) = putString(KEY_TKM_SHIELD2_PAYMENT_CODE, value.nullIfBlank())
+
+  /** Personal-chat entry price in wei. Group chats are always free. */
+  var tkmPersonalChatPriceWei: String
+    get() = getString(KEY_TKM_PERSONAL_CHAT_PRICE_WEI, "0") ?: "0"
+    set(value) = putString(KEY_TKM_PERSONAL_CHAT_PRICE_WEI, value.ifBlank { "0" })
+
+  /** Per-account bearer token for updating public TKMChat metadata. Never show this to other users. */
+  var tkmAccountUpdateToken: String?
+    get() = getString(KEY_TKM_ACCOUNT_UPDATE_TOKEN, null).nullIfBlank()
+    set(value) = putString(KEY_TKM_ACCOUNT_UPDATE_TOKEN, value.nullIfBlank())
 
   /** Wipes all local knowledge of the user's E164 and PNI, including the PNI identity and pre-key metadata. */
   fun clearE164AndPni() {
