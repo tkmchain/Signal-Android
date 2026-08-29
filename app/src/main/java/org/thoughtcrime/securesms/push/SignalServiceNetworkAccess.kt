@@ -168,7 +168,7 @@ class SignalServiceNetworkAccess(context: Context) {
     }
   }
 
-  private val serviceTrustStore: TrustStore = SignalServiceTrustStore(context)
+  private val serviceTrustStore: TrustStore? = if (BuildConfig.BUILD_DISTRIBUTION_TYPE == "github") null else SignalServiceTrustStore(context)
   private val gTrustStore: TrustStore = DomainFrontingTrustStore(context)
   private val fTrustStore: TrustStore = DomainFrontingDigicertTrustStore(context)
 
